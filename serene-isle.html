@@ -1653,8 +1653,23 @@ const BM={z:1,cx:N/2,cz:N/2,drag:null};
 function openMap(){if(!running||(uiOpen&&uiOpen!=='map'))return;if(uiOpen==='map'){closeMap();return}if(locked)document.exitPointerLock();uiOpen='map';drawMini();const S=Math.max(240,Math.min(innerWidth-48,innerHeight-130,860));const cv=$('#bmCv');cv.width=cv.height=S;cv.style.width=cv.style.height=S+'px';document.querySelector('.bmbox').style.width=(S+24)+'px';BM.z=1;BM.cx=N/2;BM.cz=N/2;$('#bigmap').hidden=false;
   $('#bmLeg').innerHTML=[['#ead59e','Bãi biển'],['#8db552','Đồi cỏ'],['#5a8a36','Rừng'],['#a9c95a','Đồng bằng'],['#c9673a','Sa mạc'],['#3e7a2c','Rừng mưa'],['#617a48','Đầm lầy'],['#eef2f4','Núi tuyết'],['#4eb0c4','Sông hồ'],['#c45a3a','Thị trấn, nhà']].map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join('');drawBigMap();SFX.pop()}
 function closeMap(){$('#bigmap').hidden=true;uiOpen=null;canvas.focus()}
+const BLBL={1:'Bãi biển',2:'Đồi cỏ',3:'Rừng',4:'Sa mạc',6:'Rừng mưa',7:'Đầm lầy',9:'Thảo nguyên',10:'Đồng bằng',11:'Núi tuyết',12:'Rừng thông',13:'Sông hồ',14:'Biển'};let BREG=null;
+function bioRegions(){const C=12,W=Math.ceil(N/C),key=new Uint8Array(W*W),cnt=new Uint16Array(16);
+  for(let a=0;a<W;a++)for(let b=0;b<W;b++){cnt.fill(0);for(let u=1;u<C;u+=3)for(let v=1;v<C;v+=3){const i=a*C+u,j=b*C+v;if(i>=N||j>=N)continue;const k=IDX(i,j);let t=BIO[k];if(H[k]===0)t=FRESH[k]?13:14;else if(t===8)t=H[k]>=4?11:12;else if(t===5)t=0;cnt[t]++}
+    let bt=0,bn=0;for(let t=0;t<16;t++)if(cnt[t]>bn){bn=cnt[t];bt=t}key[b*W+a]=bn>=8?bt:0}
+  const seen=new Uint8Array(W*W),out=[];
+  for(let q=0;q<W*W;q++){const t=key[q];if(!t||seen[q])continue;const st=[q],cells=[];seen[q]=1;let sx=0,sz=0;
+    while(st.length){const c=st.pop();cells.push(c);const a=c%W,b=(c/W)|0;sx+=a;sz+=b;for(const[da,db]of[[1,0],[-1,0],[0,1],[0,-1]]){const na=a+da,nb=b+db;if(na<0||nb<0||na>=W||nb>=W)continue;const n=nb*W+na;if(!seen[n]&&key[n]===t){seen[n]=1;st.push(n)}}}
+    if(cells.length<3||(t===14&&cells.length<40))continue;const mx=sx/cells.length,mz=sz/cells.length;let best=cells[0],bd=1e9;for(const c of cells){const d=(c%W-mx)**2+(((c/W)|0)-mz)**2;if(d<bd){bd=d;best=c}}
+    out.push({t,n:cells.length,x:(best%W+.5)*C,z:(((best/W)|0)+.5)*C})}
+  return out.sort((a,b)=>b.n-a.n)}
+function drawBioLabels(c,sx,sy,s,S){if(BM.z<1.5)return;if(!BREG)BREG=bioRegions();const fs=Math.round(Math.min(18,10+BM.z*1.2)),used=[];c.font=`800 ${fs}px system-ui`;c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';
+  for(const r of BREG){const px=(r.x-sx)*s,py=(r.z-sy)*s;if(px<-40||py<-20||px>S+40||py>S+20)continue;if(r.n*144*s*s<fs*fs*30)continue;const tx=BLBL[r.t],w=c.measureText(tx).width+10,h=fs+8,bx=[px-w/2,py-h/2,px+w/2,py+h/2];
+    if(bx[0]<4||bx[1]<4||bx[2]>S-4||bx[3]>S-4)continue;if(used.some(u=>!(bx[2]<u[0]||bx[0]>u[2]||bx[3]<u[1]||bx[1]>u[3])))continue;used.push(bx);
+    c.lineWidth=4;c.strokeStyle='rgba(30,20,10,.75)';c.strokeText(tx,px,py);c.fillStyle=r.t>=13?'#e6f7ff':'#fff6df';c.fillText(tx,px,py)}
+  c.textBaseline='alphabetic'}
 function drawBigMap(){const cv=$('#bmCv'),c=cv.getContext('2d'),S=cv.width,V=N/BM.z;BM.cx=Math.max(V/2,Math.min(N-V/2,BM.cx));BM.cz=Math.max(V/2,Math.min(N-V/2,BM.cz));const sx=BM.cx-V/2,sy=BM.cz-V/2,s=S/V;
-  c.fillStyle='#1d6f86';c.fillRect(0,0,S,S);c.imageSmoothingEnabled=BM.z<2;c.drawImage(miniBase,sx,sy,V,V,0,0,S,S);const P2=(x,z)=>[(x-sx+.5)*s,(z-sy+.5)*s];
+  c.fillStyle='#1d6f86';c.fillRect(0,0,S,S);c.imageSmoothingEnabled=BM.z<2;c.drawImage(miniBase,sx,sy,V,V,0,0,S,S);drawBioLabels(c,sx,sy,s,S);const P2=(x,z)=>[(x-sx+.5)*s,(z-sy+.5)*s];
   const[tx,ty]=P2(CX,CZ);c.fillStyle='#c45a3a';c.strokeStyle='#fff';c.lineWidth=2;c.fillRect(tx-6,ty-6,12,12);c.strokeRect(tx-6,ty-6,12,12);c.font='800 13px system-ui';c.fillStyle='#3a2715';c.textAlign='center';c.fillText('Thị trấn',tx,ty-10);
   if(G.tmap){const[x,y]=P2(G.tmap.k%N,(G.tmap.k/N)|0);c.strokeStyle='#d8302a';c.lineWidth=4;c.beginPath();c.moveTo(x-8,y-8);c.lineTo(x+8,y+8);c.moveTo(x+8,y-8);c.lineTo(x-8,y+8);c.stroke()}
   if(G.bottle){const[x,y]=P2(G.bottle.k%N,(G.bottle.k/N)|0);c.fillStyle='#e8fff6';c.strokeStyle='#2a6a5a';c.lineWidth=2;c.beginPath();c.arc(x,y,5,0,7);c.fill();c.stroke()}
