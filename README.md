@@ -22,6 +22,8 @@ python -m http.server 8765
 
 Then go to http://localhost:8765/redgum-island.html
 
+Play online: https://thcphm.github.io/redgum-island/
+
 ## Controls (default)
 - WASD: move · Space: jump · Shift: run · Mouse drag: orbit camera
 - Left mouse or F: use tool (hold to repeat) · Mouse wheel / 1–9: switch item
