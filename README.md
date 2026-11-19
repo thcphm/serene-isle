@@ -1,4 +1,4 @@
-# Redgum Island
+# Đảo Bình Yên · Serene Isle
 
 A cozy 3D island life sim built with Three.js. The whole game is a single HTML file.
 

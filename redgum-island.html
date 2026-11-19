@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Redgum Island</title>
+<title>Đảo Bình Yên · Serene Isle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap">
 <style>
@@ -205,7 +205,7 @@ body.intro #hud,body.intro #touch{display:none}
 </div>
 <div id="title">
   <div class="card">
-    <h1>Redgum<br>Island</h1>
+    <h1>Đảo<br>Bình Yên</h1><p class="tag" style="margin:2px 0 0;font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:14px">Serene Isle</p>
     <p class="tag">Bỏ lại thành phố ồn ào và những deadline không hồi kết. Một hòn đảo đất đỏ, một ông lão, và một cuộc sống chậm rãi đang chờ bạn.</p>
     <ul>
       <li><span class="kbd">WASD</span>di chuyển</li>
@@ -2062,7 +2062,7 @@ function introUpdate(dt){IN.t+=dt;const s=SLIDES[IN.i];$('#introBlack').style.op
     const h=IN.hero;h.g.position.copy(introBoat.position).addScaledVector(u.dir,-1.15);h.g.position.y+=.5;h.g.rotation.y=introBoat.rotation.y;poseHuman(h,dt,{amp:0,T:IN.t});h.head.rotation.x=-.12;
     const side=new V3(u.dir.z,0,-u.dir.x);camera.position.copy(introBoat.position).addScaledVector(u.dir,3.5).addScaledVector(side,3.6);camera.position.y=2.4;camera.lookAt(introBoat.position.x-u.dir.x*6,1.2,introBoat.position.z-u.dir.z*6)}}
 function introNext(){audioOn();const s=SLIDES[IN.i];if(IN.shown<s.t.length){IN.shown=s.t.length;$('#introText').textContent=s.t;return}if(IN.i<SLIDES.length-1){SFX.pop();introSlide(IN.i+1);return}introEnd()}
-function introEnd(){if(!IN.on||IN.ending)return;IN.ending=true;audioOn();const f=$('#fade');f.innerHTML='Redgum Island<small>Ngày 1</small>';f.classList.add('on');
+function introEnd(){if(!IN.on||IN.ending)return;IN.ending=true;audioOn();const f=$('#fade');f.innerHTML='Đảo Bình Yên<small>Ngày 1</small>';f.classList.add('on');
   setTimeout(()=>{if(IN.cs&&IN.cs.leave)IN.cs.leave();document.body.classList.remove('intro');IN.on=false;IN.ending=false;IN.cs=null;IN.world=null;$('#intro').hidden=true;if(introBoat){scene.remove(introBoat);introBoat=null}
     if(IN.hero&&IN.hero.g.parent)IN.hero.g.parent.remove(IN.hero.g);scene.fog.near=FOG0.near;scene.fog.far=FOG0.far;player.g.visible=true;G.time=14*60;
     arriveStart();setTimeout(()=>f.classList.remove('on'),300)},1100)}
