@@ -1405,7 +1405,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last
   for(const n of npcs){let mv=false;if(n.wander){n.wait-=dt;if(n.wait<=0){const dx=n.tx-n.x,dz=n.tz-n.z,d=Math.hypot(dx,dz);if(d<.15){n.wait=2+Math.random()*4;n.tx=n.hx+(Math.random()-.5)*7;n.tz=n.hz+(Math.random()-.5)*5}
       else{const s=1.4*dt;const ox=n.x,oz=n.z;moveEntity(n,dx/d*s,dz/d*s,.2);if(Math.abs(n.x-ox)+Math.abs(n.z-oz)<s*.3){n.tx=n.x;n.tz=n.z}n.rot=Math.atan2(dx,dz);n.walk+=dt*3.6;mv=true}}}
     else{const d=Math.hypot(PL.x-n.x,PL.z-n.z);if(d<5)n.rot=Math.atan2(PL.x-n.x,PL.z-n.z);else n.rot=n.id==='bay'?TANG()+Math.PI:0}
-    n.h.g.position.set(n.x,hAt(n.x,n.z),n.z);n.h.g.rotation.y=n.rot;poseHuman(n.h,dt,{p:n.walk,amp:mv?.65:0,T:T+n.hx*3,old:n.old})}
+    n.h.g.position.set(n.x,gH(n.x,n.z),n.z);n.h.g.rotation.y=n.rot;poseHuman(n.h,dt,{p:n.walk,amp:mv?.65:0,T:T+n.hx*3,old:n.old})}
   /* hoppers */
   for(const h of hoppers){const dp=Math.hypot(PL.x-h.x,PL.z-h.z);
     if(dp<4&&h.wait>0){h.wait=0;const a=Math.atan2(h.x-PL.x,h.z-PL.z);h.tx=h.x+Math.sin(a)*6;h.tz=h.z+Math.cos(a)*6}
