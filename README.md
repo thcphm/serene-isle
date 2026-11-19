@@ -6,7 +6,9 @@ You leave a stressful city job and move to a nearly deserted island. Old Bảy, 
 
 ## Features
 - Smooth skinned chibi character with procedural walk, run, jump and tool animations
-- Large procedural island with 10 biomes: beach, bush, forest, desert, jungle, wetland, alpine, savanna, sea and a coastal town with a pier
+- Huge procedural island (800×800 tiles) with 11 biomes: beach, bushland, forest, pine forest, plains, desert with terraced mesas, tropics, mangrove wetland, alpine peaks, savanna and a coastal town with a pier
+- Winding fresh-water rivers you can wade across, billabong lakes, rolling hills, rough-soil ore patches and red-sand shores
+- Terrain is chunked; trees stream in around the camera with automatic low-poly LOD and near-only shadows
 - Farming, tree chopping (palms drop coconuts), crafting, building, and moving buildings and placed items
 - Fishing minigame: hold to cast by distance, then keep the fish inside the bar. 30 fish across habitats, plus squid and other sea creatures
 - Health, water and energy that drain over time and refill when you eat or drink
