@@ -16,6 +16,11 @@ You leave a stressful city job and move to a nearly deserted island. Old Bảy, 
 - Settings for volume, graphics and keybinds
 
 - Character creation: pick male or female and name your character
+- Wildlife in every biome, a pet dog or cat, and livestock (chickens, goats, cows) for eggs and milk
+- Seasons and weather, milestones and licences, a museum, campfire cooking
+- Serenity (Bình yên): slow down, watch sunsets and stars, sit by the fire, and unlock diary pages; messages in bottles and treasure maps
+
+See ROADMAP.md for what comes next.
 
 ## Run
 Open `redgum-island.html` in a browser, or serve the folder:
@@ -36,6 +41,6 @@ Play online: https://thcphm.github.io/redgum-island/
 - Days run 7:00 to 23:00. Be at your tent by 23:00 or you faint and lose everything in your bag (tools are kept)
 - Hunger: without food, energy falls to 50% between 7:00 and 12:00
 - Bag: stacks hold up to 99. You start with 8 slots; craft a cloth backpack (16) and a leather backpack (24). Overflow drops on the ground
-- E: interact · G: move a building or placed item · I: inventory · M: music · Esc: settings · H: controls help (in Settings)
+- E: interact · G: move a building or placed item · J: journal · V: sit · I: inventory · M: music · Esc: settings · H: controls help (in Settings)
 
 The game text is in Vietnamese.
