@@ -26,7 +26,9 @@ Play online: https://thcphm.github.io/redgum-island/
 
 ## Controls (default)
 - WASD: move · Space: jump · Shift: run · Mouse drag: orbit camera
-- Left mouse or F: use tool (hold to repeat) · Mouse wheel / 1–9: switch item
+- Left mouse or F: use tool (hold to repeat) · Mouse wheel / 1–9, 0: switch slot
+- Hotbar is customizable: assign tools, food or drinks from the inventory, drag slots to reorder, right-click a slot to clear it
+- Running (Shift) drains energy twice as fast
 - E: interact · G: move a building or placed item · I: inventory · M: music · Esc: settings
 
 The game text is in Vietnamese.

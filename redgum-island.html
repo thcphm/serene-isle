@@ -43,6 +43,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:#24180e;font-family:va
 .slot .k{position:absolute;top:1px;left:6px;font-size:12px;font-weight:800;color:var(--ink-2)}
 .slot .lb{font-size:11px;font-weight:700;line-height:1;margin-top:2px;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .slot .cnt{position:absolute;top:1px;right:6px;font-size:12px;font-weight:800}
+.slot.out{opacity:.55}.slot.out .em{filter:grayscale(1)}.slot[draggable=true]{cursor:grab}
+.hbrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:8px;font-size:13px;font-weight:700;color:var(--ink-2)}.hbk{min-width:34px;height:34px;border-radius:8px;border:2px solid var(--bark);background:var(--paper-2);font:800 13px var(--f-ui);color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:2px;padding:0 5px}.hbk i{font-style:normal;font-size:12px}.hbk.on{background:#e8913a;color:#fff}.hbk.x{background:#e9d8c0}.ict svg{width:30px;height:30px}
 .slot .wb{position:absolute;left:8px;right:8px;bottom:4px;height:4px;border-radius:3px;background:#d9c08c;overflow:hidden}
 .slot .wb i{display:block;height:100%;background:#3d9bd6}
 .slot.on{background:#ffe08a;border-color:#8a4f12;transform:translateY(-6px);box-shadow:0 6px 0 #8a4f12}
@@ -271,7 +273,12 @@ const PROJECTS=[
   {id:'market',n:'Chợ nông sản Ông Bao',cost:{coins:1500,wood:30,stone:50},d:'Ông Bao chuyển tới. Nông sản +25%, bán hạt bí ngô & dưa hấu.',x:-7,z:-5},
   {id:'home',n:'Nhà mái tôn của bạn',cost:{coins:3000,wood:60,stone:40},d:'Thay lều bằng nhà. Ngủ dậy có thêm 20 sức.',x:-7,z:1},
 ];
-const HOTBAR=[{id:'axe',n:'Rìu'},{id:'shovel',n:'Xẻng'},{id:'hoe',n:'Cuốc đất'},{id:'can',n:'Bình tưới'},{id:'seed',n:'Hạt giống'},{id:'pick',n:'Cuốc chim'},{id:'rod',n:'Cần câu'},{id:'net',n:'Vợt'},{id:'build',n:'Xây dựng'}];
+const TOOLS={axe:'Rìu',shovel:'Xẻng',hoe:'Cuốc đất',can:'Bình tưới',seed:'Hạt giống',pick:'Cuốc chim',rod:'Cần câu',net:'Vợt',build:'Xây dựng'};
+const HB_N=10,HB_DEF=()=>[...Object.keys(TOOLS),''];
+const HOTBAR=[];
+/* dung lai HOTBAR tu G.hb (moi o: id dung cu, id do an, hoac '') */
+function syncHB(){HOTBAR.length=0;for(let s=0;s<HB_N;s++){const id=(G.hb&&G.hb[s])||'';HOTBAR.push(!id?{id:'',n:'Trống',empty:true}:TOOLS[id]?{id,n:TOOLS[id]}:{id,n:ITEMS[id]?ITEMS[id].n:id,item:true})}}
+const hbOwn=t=>!!t&&!t.empty&&(t.item?true:!!G.owned[t.id]);
 const ICON={
   shovel:'<svg viewBox="0 0 40 40"><path d="M9 35 L25 13" stroke="#8a5a2e" stroke-width="4.5" stroke-linecap="round"/><path d="M5 33 l8 6" stroke="#8a5a2e" stroke-width="4" stroke-linecap="round"/><path d="M22 15 l5 -9 q6 1 7 7 l-8 5 z" fill="#c3ccd2" stroke="#4f5a63" stroke-width="2" stroke-linejoin="round"/></svg>',
   axe:'<svg viewBox="0 0 40 40"><path d="M11 35 L27 9" stroke="#8a5a2e" stroke-width="4.5" stroke-linecap="round"/><path d="M21 5 q12 1 13 13 l-10 -2 z" fill="#c3ccd2" stroke="#4f5a63" stroke-width="2" stroke-linejoin="round"/></svg>',
@@ -297,7 +304,7 @@ const H=new Int8Array(N*N), BIO=new Uint8Array(N*N), DIRT=new Uint8Array(N*N); /
 const solid=new Uint8Array(N*N), soil=new Uint8Array(N*N), wet=new Uint8Array(N*N);
 const objAt=new Array(N*N).fill(null), bldAt=new Array(N*N).fill(null), placedAt=new Array(N*N).fill(null), cropAt=new Array(N*N).fill(null);
 const baseCol=[];
-const G={bpos:{},hp:100,drink:100,tut:0,owned:{},flags:{},day:1,time:840,coins:30,energy:100,inv:{},lv:{axe:1,pick:1,can:1,rod:1,net:1},water:20,built:{},caught:{},quest:null,seedSel:0,buildSel:null,tool:0};
+const G={bpos:{},hp:100,drink:100,tut:0,owned:{},flags:{},day:1,time:840,coins:30,energy:100,inv:{},lv:{axe:1,pick:1,can:1,rod:1,net:1},water:20,built:{},caught:{},quest:null,seedSel:0,buildSel:null,tool:0,hb:HB_DEF()};syncHB();
 let running=false, uiOpen=null, paused=false;
 /* cai dat nguoi choi (luu localStorage) */
 const SET_DEF={vol:80,music:70,sfx:85,quality:'high',shadows:true,grass:true,fov:42,view:150,help:true,sens:50,invY:false,
@@ -786,7 +793,7 @@ function toolMesh(id){const g=new THREE.Group(),b=(w,h,d,c,x,y,z,rx=0)=>{const m
   g.rotation.x=tilt;g.scale.setScalar(.85);return g}
 const player=makeHuman({shirt:'#3f7fb0',pants:'#6b4a2e',skin:'#f0c098',hat:'#9a6534'});scene.add(player.g);
 const PL={x:CX,z:CZ+2,y:1,vy:0,ground:true,act:'axe',swingDur:.4,prep:0,land:0,landAmt:0,rot:Math.PI,swing:0,walk:0,moving:false,speed:0};
-let toolObj=null;function refreshToolMesh(){if(toolObj)player.hand.remove(toolObj);const id=HOTBAR[G.tool].id;toolObj=G.owned[id]?toolMesh(id):new THREE.Group();player.hand.add(toolObj)}
+let toolObj=null;function refreshToolMesh(){if(toolObj)player.hand.remove(toolObj);const id=HOTBAR[G.tool].id;toolObj=TOOLS[id]&&G.owned[id]?toolMesh(id):new THREE.Group();player.hand.add(toolObj)}
 
 /* ---------- buildings & placeables ---------- */
 function houseGeo(wall,roof,door){return merge([
@@ -1005,7 +1012,7 @@ function eatText(it){const e=it.eat||{};return[e.hp?`+${e.hp} ❤`:'',e.wt?`+${e
 function consume(id){const it=ITEMS[id],e=it.eat||{};take(id);G.hp=Math.min(100,G.hp+(e.hp||0));G.drink=Math.min(100,G.drink+(e.wt||0));G.energy=Math.min(EMAX(),G.energy+(e.en||0));
   SFX.pop();toast(`${e.wt&&!e.en?'Uống':'Ăn'} ${it.n}: ${eatText(it)}`);hudDirty=true}
 let statWarn={};
-function statsUpdate(dt){const hrs=dt*2/60;G.drink=Math.max(0,G.drink-5*hrs);G.energy=Math.max(0,G.energy-2.5*hrs);
+function statsUpdate(dt){const hrs=dt*2/60;G.drink=Math.max(0,G.drink-5*hrs);G.energy=Math.max(0,G.energy-2.5*hrs*(PL.sprint&&PL.moving?2:1));
   let dh=-1;if(G.drink<=0)dh-=7;if(G.energy<=0)dh-=5;G.hp=Math.max(0,Math.min(100,G.hp+dh*hrs));
   for(const[k,v,m]of[['drink',G.drink,'Khát nước quá… Tìm ao suối hoặc uống dừa, chai nước.'],['energy',G.energy,'Đói và mệt rồi. Ăn gì đó đi.'],['hp',G.hp,'Máu thấp! Ăn uống ngay kẻo ngất.']]){if(v<20&&!statWarn[k]){statWarn[k]=1;toast(m);SFX.err()}if(v>30)statWarn[k]=0}
   if(G.hp<=0&&running)newDay('hp')}
@@ -1089,6 +1096,8 @@ function startAct(t){const d=ACT_DUR[t]||.4;PL.swing=d;PL.swingDur=d;PL.act=t}
 const atImpact=(f,at=.64)=>setTimeout(f,PL.swingDur*at*1000);
 function useTool(){
   if(!running||uiOpen||PL.swing>0)return;audioOn();
+  {const t=HOTBAR[G.tool];if(t.empty){toast('Ô trống. Mở Túi đồ để gán đồ vào ô này.');return}
+   if(t.item){const it=ITEMS[t.id];if(!(G.inv[t.id]>0)){toast(`Hết ${it.n} rồi.`);SFX.err();return}if(it.food){consume(t.id);renderHotbar()}return}}
   const tool=HOTBAR[G.tool].id,k=targetIdx();
   if(!G.owned[tool]){toast(G.tut<1?'Tay không… Hãy tìm ông lão ở căn lán.':`Chưa có ${HOTBAR[G.tool].n}.`);return}
   if(tool==='rod'){rodDown();return}
@@ -1149,7 +1158,7 @@ function getInteract(){
   const o=objAt[k];if(o&&o.type==='bush'&&o.berries)return{l:'Hái quả mọng',f:()=>{o.berries=0;objMatrix(o);give('berry',ri(2,4));SFX.pop()}};
   return null}
 function interact(){if(!running||uiOpen)return;audioOn();const a=getInteract();if(a)a.f()}
-function toolHint(){const tool=HOTBAR[G.tool].id,k=targetIdx();if(!G.owned[tool])return'';
+function toolHint(){const T0=HOTBAR[G.tool];if(T0.item){const it=ITEMS[T0.id];return G.inv[T0.id]>0?`${it.eat&&it.eat.wt&&!it.eat.en?'Uống':'Ăn'} ${it.n} (${eatText(it)})`:''}const tool=T0.id,k=targetIdx();if(!G.owned[tool])return'';
   if(tool==='rod'){const st=fish.state;return st==='charge'?'Thả chuột để quăng':st==='wait'?'Chờ cá cắn câu…':st==='bite'?'Bấm ngay để giật cần!':st==='idle'?'Giữ để lấy lực, thả để quăng câu':''}
   if(k<0)return'';if(cropAt[k]&&cropStage(cropAt[k])===3&&tool!=='pick')return`Thu hoạch ${ITEMS[cropAt[k].type].n}`;
   const o=objAt[k];if((tool==='axe'||tool==='pick')&&o)return OT[o.type].tool===tool?`${tool==='axe'?'Chặt':'Đập'} ${OT[o.type].n}`:`${OT[o.type].n} – cần ${OT[o.type].tool==='axe'?'rìu':'cuốc chim'}`;
@@ -1192,6 +1201,7 @@ function shopBuyList(){const L=[{id:'seed_wheat',p:8},{id:'seed_tomato',p:12}];i
   if(G.built.fisher&&G.owned.rod&&G.lv.rod===1)U.push({u:'rod',n:'Cần câu xịn',d:'Cá cắn nhanh, dễ gặp cá hiếm',i:ICON.rod,cost:{coins:500}});
   if(G.owned.net&&G.lv.net===1)U.push({u:'net',n:'Vợt cán dài',d:'Bắt bọ xa hơn',i:ICON.net,cost:{coins:250}});return{L,U}}
 const KEYN={up:'Đi tới',down:'Đi lùi',left:'Sang trái',right:'Sang phải',run:'Chạy',jump:'Nhảy',use:'Dùng dụng cụ',act:'Tương tác / nói chuyện',inv:'Túi đồ',move:'Di chuyển công trình / đồ đặt'};
+function hbRow(id){return`<div class="hbrow"><span>Gán vào ô:</span>${G.hb.map((x,s)=>`<button class="hbk ${x===id?'on':''}" data-a="hbset" data-v="${s}|${id}" type="button" title="${x?(TOOLS[x]||ITEMS[x].n):'Trống'}">${s===9?0:s+1}<i>${x?(TOOLS[x]?'🛠':ITEMS[x].i):''}</i></button>`).join('')}${G.hb.includes(id)?`<button class="hbk x" data-a="hbclr" data-v="${G.hb.indexOf(id)}" type="button">Bỏ</button>`:''}</div>`}
 function keyName(c){return c==='Space'?'Space':c.startsWith('Key')?c.slice(3):c.startsWith('Digit')?c.slice(5):c.replace('Left',' trái').replace('Right',' phải').replace('Arrow','Mũi tên ')}
 function applySet(){if(AOUT.master){AOUT.master.gain.value=SET.vol/100;AOUT.sfx.gain.value=SET.sfx/100}if(MUS.master&&AC)MUS.master.gain.setTargetAtTime(MUS.on?.42*SET.music/100:0,AC.currentTime,.1);
   renderer.setPixelRatio({low:.7,mid:1,high:Math.min(window.devicePixelRatio||1,2)}[SET.quality]);resize();
@@ -1221,8 +1231,12 @@ function renderPanel(){let h='';if(uiOpen==='settings'){panel.innerHTML=settings
     h+='<div class="rows">'+PROJECTS.map(p=>`<div class="row"><div class="ic">${G.built[p.id]?'✅':'🏗️'}</div><div class="nm">${p.n}<small>${p.d}</small>${G.built[p.id]?'':`<small class="req">${reqHTML(p.cost)}</small>`}</div><div class="acts">${G.built[p.id]?'<b>Đã xây</b>':`<button class="btn" data-a="proj" data-v="${p.id}" type="button" ${canPay(p.cost)?'':'disabled'}>Xây</button>`}</div></div>`).join('')+'</div>'}
   else if(uiOpen==='sleep'){h+=head('Đi ngủ?',`Bây giờ là ${clock()}. Ngủ để sang ngày ${G.day+1}: cây được tưới sẽ lớn, sức hồi đầy, trò chơi tự lưu.`)+'<div class="detail" style="justify-content:flex-end"><button class="btn" data-a="close" type="button" style="background:#9a8a6a;box-shadow:0 3px 0 #6a5a3a">Chưa</button><button class="btn alt" data-a="sleep" type="button">Ngủ đến sáng</button></div>'}
   else if(uiOpen==='inv'){h+=head('Túi đồ',`${G.coins} xu · sức ${Math.round(G.energy)}`)+`<div class="tabs"><button class="tab ${invTab==='items'?'on':''}" data-a="itab" data-v="items" type="button">Đồ đạc</button><button class="tab ${invTab==='book'?'on':''}" data-a="itab" data-v="book" type="button">Sổ sưu tầm</button></div>`;
-    if(invTab==='items'){const ids=Object.keys(G.inv);h+=ids.length?`<div class="grid">${ids.map(id=>`<button class="cell ${invSel===id?'sel':''}" data-a="isel" data-v="${id}" type="button"><span class="ic">${ITEMS[id].i}</span>${ITEMS[id].n}<br>×${G.inv[id]}</button>`).join('')}</div>`:'<p class="empty">Chưa có gì.</p>';
-      if(invSel&&G.inv[invSel]){const it=ITEMS[invSel];h+=`<div class="detail"><div><b>${it.i} ${it.n}</b><div class="req">Bán được ${sellPrice(invSel)} xu${it.food?` · ${eatText(it)}`:''}</div></div><div class="acts">${it.food?`<button class="btn alt" data-a="eat" data-v="${invSel}" type="button">${it.eat&&it.eat.wt&&!it.eat.en?'Uống':'Ăn'}</button>`:''}${it.place?`<button class="btn" data-a="place" data-v="${invSel}" type="button">Đặt xuống</button>`:''}${it.seed?`<button class="btn" data-a="seedsel" data-v="${invSel}" type="button">Cầm hạt này</button>`:''}</div></div>`}}
+    if(invTab==='items'){const ids=Object.keys(G.inv).filter(id=>G.inv[id]>0),tl=Object.keys(TOOLS).filter(id=>G.owned[id]);
+      h+=`<p class="sub">Chọn món rồi bấm số ô bên dưới, hoặc kéo thả thẳng xuống thanh nhanh. Chuột phải lên ô để bỏ trống.</p>`;
+      if(tl.length)h+=`<div class="grid">${tl.map(id=>`<button class="cell ${invSel===id?'sel':''}" data-a="isel" data-v="${id}" draggable="true" data-drag="${id}" type="button"><span class="ic ict">${ICON[id]}</span>${TOOLS[id]}<br>${G.hb.includes(id)?'ô '+((G.hb.indexOf(id)+1)%10):'chưa gán'}</button>`).join('')}</div>`;
+      h+=ids.length?`<div class="grid">${ids.map(id=>`<button class="cell ${invSel===id?'sel':''}" data-a="isel" data-v="${id}" ${ITEMS[id].food?`draggable="true" data-drag="${id}"`:''} type="button"><span class="ic">${ITEMS[id].i}</span>${ITEMS[id].n}<br>×${G.inv[id]}</button>`).join('')}</div>`:'<p class="empty">Chưa có gì.</p>';
+      if(invSel&&TOOLS[invSel]&&G.owned[invSel])h+=`<div class="detail"><div><b>${TOOLS[invSel]}</b><div class="req">Dụng cụ</div></div></div>${hbRow(invSel)}`;
+      if(invSel&&G.inv[invSel]){const it=ITEMS[invSel];h+=`<div class="detail"><div><b>${it.i} ${it.n}</b><div class="req">Bán được ${sellPrice(invSel)} xu${it.food?` · ${eatText(it)}`:''}</div></div><div class="acts">${it.food?`<button class="btn alt" data-a="eat" data-v="${invSel}" type="button">${it.eat&&it.eat.wt&&!it.eat.en?'Uống':'Ăn'}</button>`:''}${it.place?`<button class="btn" data-a="place" data-v="${invSel}" type="button">Đặt xuống</button>`:''}${it.seed?`<button class="btn" data-a="seedsel" data-v="${invSel}" type="button">Cầm hạt này</button>`:''}</div></div>${it.food?hbRow(invSel):''}`}}
     else{const all=[...FISH.map(f=>f.id),...Object.keys(BUGS)];const n=all.filter(id=>G.caught[id]).length;h+=`<p class="sub">Đã tìm thấy ${n}/${all.length} loài.</p><div class="grid">${all.map(id=>G.caught[id]?`<div class="cell"><span class="ic">${ITEMS[id].i}</span>${ITEMS[id].n}<br>${ITEMS[id].p} xu</div>`:`<div class="cell unk"><span class="ic">❔</span>${ITEMS[id].cat==='fish'?'Cá':'Côn trùng'} chưa rõ</div>`).join('')}</div>`}}
   panel.innerHTML=h}
 panel.addEventListener('input',e=>{const k=e.target.dataset.set;if(!k)return;SET[k]=+e.target.value;const o=$('#out-'+k);if(o)o.textContent=SET[k]+({vol:'%',music:'%',sfx:'%',fov:'°'}[k]||'');applySet();saveSet()});
@@ -1231,7 +1245,7 @@ panel.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b
   if(a==='stog'){SET[v]=b.dataset.b==='1';applySet();saveSet();renderPanel();return}if(a==='bind'){REBIND=v;renderPanel();return}
   if(a==='sreset'){SET=JSON.parse(JSON.stringify(SET_DEF));applySet();saveSet();renderPanel();return}
   if(a==='close')return closePanel();
-  if(a==='stab')shopTab=v;if(a==='itab')invTab=v;if(a==='isel')invSel=v;
+  if(a==='stab')shopTab=v;if(a==='itab')invTab=v;if(a==='isel')invSel=v;if(a==='hbset'){const[sl,id]=v.split('|');hbAssign(+sl,id)}if(a==='hbclr')hbClear(+v);
   if(a==='buy'){const n=+b.dataset.n,p=+b.dataset.p;if(G.coins>=p*n){G.coins-=p*n;give(v,n);SFX.coin()}}
   if(a==='up'){const u=shopBuyList().U.find(x=>x.u===v);if(u&&canPay(u.cost)){pay(u.cost);G.lv[v]=2;if(v==='can')G.water=40;toast(`Nâng cấp: ${u.n}!`);SFX.catch();refreshToolMesh()}}
   if(a==='sell'){G.flags.sold=1;const n=b.dataset.n==='all'?G.inv[v]:1;const g=sellPrice(v)*n;take(v,n);G.coins+=g;SFX.coin();toast(`+${g} xu`)}
@@ -1253,13 +1267,24 @@ function buildProject(p,fresh){G.built[p.id]=true;
 /* ---------- HUD ---------- */
 let hudDirty=true;
 const clock=()=>{const m=Math.floor(G.time)%1440,h=Math.floor(m/60);return String(h).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
-function renderHotbar(){$('#hotbar').innerHTML=HOTBAR.map((t,s)=>{let inner=ICON[t.id],extra='',lb=t.n;
+function renderHotbar(){$('#hotbar').innerHTML=HOTBAR.map((t,s)=>{let inner=t.empty?'':t.item?`<span class="em">${ITEMS[t.id].i}</span>`:ICON[t.id],extra=t.item?`<span class="cnt">${G.inv[t.id]||0}</span>`:'',lb=t.n;
   if(t.id==='seed'){const sid=SEEDS[G.seedSel];extra=`<span class="cnt">${G.inv[sid]||0}</span>`;lb=ITEMS[sid].n.replace('Hạt ','')}
   if(t.id==='build'&&G.buildSel){inner=`<span class="em">${ITEMS[G.buildSel].i}</span>`;extra=`<span class="cnt">${G.inv[G.buildSel]||0}</span>`;lb=ITEMS[G.buildSel].n}
   if(t.id==='can')extra=`<span class="wb"><i style="width:${G.water/(20*G.lv.can)*100}%"></i></span>`;
-  const lk=!G.owned[t.id];return`<button class="slot ${G.tool===s&&!lk?'on':''} ${lk?'lock':''}" data-s="${s}" type="button" aria-label="${t.n}"><span class="k">${s+1}</span>${inner}<span class="lb">${lk?'Chưa có':lb}</span>${lk?'':extra}</button>`}).join('')}
+  const lk=!hbOwn(t),out=t.item&&!(G.inv[t.id]>0);return`<button class="slot ${G.tool===s&&!lk?'on':''} ${lk?'lock':''} ${out?'out':''}" data-s="${s}" draggable="${t.empty?'false':'true'}" type="button" aria-label="${t.n}"><span class="k">${s===9?0:s+1}</span>${inner}<span class="lb">${t.empty?'Trống':lk?'Chưa có':lb}</span>${lk?'':extra}</button>`}).join('')}
+/* keo tha: doi cho 2 o tren thanh, hoac keo do tu Tui do vao o */
+function hbAssign(slot,id){const old=G.hb.indexOf(id),cur=HOTBAR[G.tool]&&HOTBAR[G.tool].id;if(old>=0)G.hb[old]=G.hb[slot];G.hb[slot]=id;syncHB();
+  const ns=G.hb.indexOf(cur);G.tool=ns>=0?ns:slot;if(HOTBAR[G.tool].id!=='rod')endFishing();refreshToolMesh();hudDirty=true;renderHotbar();save()}
+function hbClear(slot){const id=G.hb[slot];if(!id)return;G.hb[slot]='';syncHB();if(G.tool===slot)refreshToolMesh();hudDirty=true;renderHotbar();save()}
+$('#hotbar').addEventListener('dragstart',e=>{const b=e.target.closest('.slot');if(!b)return;e.dataTransfer.setData('text/plain','hb:'+b.dataset.s);e.dataTransfer.effectAllowed='move'});
+$('#hotbar').addEventListener('dragover',e=>{if(e.target.closest('.slot')){e.preventDefault();e.dataTransfer.dropEffect='move'}});
+$('#hotbar').addEventListener('drop',e=>{const b=e.target.closest('.slot');if(!b)return;e.preventDefault();const d=e.dataTransfer.getData('text/plain'),to=+b.dataset.s;
+  if(d.startsWith('hb:')){const fr=+d.slice(3);if(fr===to)return;const cur=HOTBAR[G.tool].id;[G.hb[fr],G.hb[to]]=[G.hb[to],G.hb[fr]];syncHB();const ns=G.hb.indexOf(cur);if(ns>=0)G.tool=ns;hudDirty=true;renderHotbar();save()}
+  else if(d.startsWith('it:'))hbAssign(to,d.slice(3))});
+panel.addEventListener('dragstart',e=>{const c=e.target.closest('[data-drag]');if(!c)return;e.dataTransfer.setData('text/plain','it:'+c.dataset.drag);e.dataTransfer.effectAllowed='move'});
+$('#hotbar').addEventListener('contextmenu',e=>{const b=e.target.closest('.slot');if(!b)return;e.preventDefault();hbClear(+b.dataset.s)});
 $('#hotbar').addEventListener('click',e=>{const b=e.target.closest('.slot');if(!b)return;selectTool(+b.dataset.s)});
-function selectTool(s){if(!G.owned[HOTBAR[s].id]){toast(`Chưa có ${HOTBAR[s].n}.`);return}if(G.tool===s){cycle();return}G.tool=s;if(HOTBAR[s].id!=='rod')endFishing();refreshToolMesh();hudDirty=true}
+function selectTool(s){const t=HOTBAR[s];if(!t)return;if(t.empty){toast('Ô trống. Mở Túi đồ (I) để gán đồ ăn, nước uống hay dụng cụ vào.');return}if(!hbOwn(t)){toast(`Chưa có ${t.n}.`);return}if(t.item&&G.tool===s){useTool();return}if(G.tool===s){cycle();return}G.tool=s;if(HOTBAR[s].id!=='rod')endFishing();refreshToolMesh();hudDirty=true}
 function cycle(){const id=HOTBAR[G.tool].id;if(id==='seed'){G.seedSel=(G.seedSel+1)%SEEDS.length;toast(`Cầm ${ITEMS[SEEDS[G.seedSel]].n} (${G.inv[SEEDS[G.seedSel]]||0})`)}
   else if(id==='build'){const own=PLACEABLES.filter(x=>has(x));if(!own.length){toast('Chưa có đồ để đặt. Chế tạo ở Bàn chế tạo.');return}G.buildSel=own[(own.indexOf(G.buildSel)+1)%own.length]}hudDirty=true}
 function renderHUD(){$('#dayLbl').textContent=`Ngày ${G.day}`;$('#coinLbl').textContent=G.coins.toLocaleString('vi-VN');
@@ -1292,7 +1317,7 @@ addEventListener('keydown',e=>{const c=e.code,K=SET.keys;if(REBIND){e.preventDef
   if(c===K.jump){e.preventDefault();if(!e.repeat)jump()}
   else if(c===K.use){if(!e.repeat){if(HOTBAR[G.tool].id==='rod'&&G.owned.rod)rodDown();else{toolHold=true;useTool()}}}
   else if(c===K.act){if(!e.repeat)interact()}
-  else if(c.startsWith('Digit')){const n=+c.slice(5);if(n>=1&&n<=9)selectTool(n-1)}
+  else if(c.startsWith('Digit')){const n=+c.slice(5);if(n>=1&&n<=9)selectTool(n-1);else if(n===0)selectTool(9)}
   else if(c==='KeyR')cycle();
   else if(c===K.inv||c==='Tab'){e.preventDefault();openPanel('inv')}
   else if(c==='KeyH'){const h=$('#help');h.hidden=!h.hidden}
@@ -1318,7 +1343,7 @@ addEventListener('pointermove',e=>{if(drag&&e.pointerType!=='touch'){orbit(e.cli
 addEventListener('pointerup',e=>{if(e.button===0){rodUp();toolHold=false}drag=null;if(tdrag&&e.pointerId===tdrag.id)tdrag=null});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 let wheelT=0;canvas.addEventListener('wheel',e=>{e.preventDefault();if(e.ctrlKey||e.altKey){camDist=Math.min(22,Math.max(3.5,camDist+Math.sign(e.deltaY)*1));return}
-  if(!running||uiOpen)return;const now=performance.now();if(now-wheelT<70)return;wheelT=now;const n=HOTBAR.length;let t2=G.tool;for(let q=0;q<n;q++){t2=(t2+(e.deltaY>0?1:-1)+n)%n;if(G.owned[HOTBAR[t2].id])break}if(!G.owned[HOTBAR[t2].id])return;G.tool=t2;if(HOTBAR[G.tool].id!=='rod')endFishing();refreshToolMesh();hudDirty=true},{passive:false});
+  if(!running||uiOpen)return;const now=performance.now();if(now-wheelT<70)return;wheelT=now;const n=HOTBAR.length;let t2=G.tool;for(let q=0;q<n;q++){t2=(t2+(e.deltaY>0?1:-1)+n)%n;if(hbOwn(HOTBAR[t2]))break}if(!hbOwn(HOTBAR[t2]))return;G.tool=t2;if(HOTBAR[G.tool].id!=='rod')endFishing();refreshToolMesh();hudDirty=true},{passive:false});
 function jump(){if(!running||uiOpen)return;if(PL.ground&&!(PL.prep>0)&&!(PL.land>.12))PL.prep=.1}
 if('ontouchstart' in window||navigator.maxTouchPoints>0){$('#touch').hidden=false;const J=$('#joy'),K=J.firstElementChild;let jid=null,jc=null;
   J.addEventListener('pointerdown',e=>{jid=e.pointerId;const r=J.getBoundingClientRect();jc={x:r.left+r.width/2,y:r.top+r.height/2};J.setPointerCapture(jid);mv(e)});
@@ -1356,7 +1381,7 @@ function confirmMove(){const M=MOVE;if(!M)return;if(!M.ok){toast('Không đặt 
 /* ---------- save/load ---------- */
 function serialize(){const objs=[],tiles=[],pl=[];for(let k=0;k<N*N;k++){const o=objAt[k];if(o)objs.push([k,o.type,o.berries,+o.rot.toFixed(2),+o.sc.toFixed(2)]);
   if(soil[k]===1||cropAt[k])tiles.push([k,soil[k],wet[k],cropAt[k]?cropAt[k].type:0,cropAt[k]?cropAt[k].g:0]);if(placedAt[k])pl.push([k,placedAt[k].type,placedAt[k].rot])}
-  return{v:4,tut:G.tut,owned:G.owned,flags:G.flags,bpos:G.bpos,seed:SEED,day:G.day,time:G.time,coins:G.coins,energy:G.energy,hp:G.hp,drink:G.drink,inv:G.inv,lv:G.lv,water:G.water,built:G.built,caught:G.caught,quest:G.quest,seedSel:G.seedSel,buildSel:G.buildSel,px:PL.x,pz:PL.z,objs,tiles,pl}}
+  return{v:4,tut:G.tut,owned:G.owned,flags:G.flags,bpos:G.bpos,seed:SEED,day:G.day,time:G.time,coins:G.coins,energy:G.energy,hp:G.hp,drink:G.drink,inv:G.inv,lv:G.lv,water:G.water,built:G.built,caught:G.caught,quest:G.quest,seedSel:G.seedSel,buildSel:G.buildSel,hb:G.hb,tool:G.tool,px:PL.x,pz:PL.z,objs,tiles,pl}}
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(serialize()))}catch(e){}}
 function loadSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));return s&&s.v===4?s:null}catch(e){return null}}
 window.claude?.hot?.snapshot?.(()=>serialize());
@@ -1370,7 +1395,7 @@ function buildWorld(sv){
   buildPier();addBuilding('shack',3,11,'shack');
   oldman=addNPC('bay','Ông Bảy',{shirt:'#8a9a7a',pants:'#5a4a3a',skin:'#d9a57a',hat:'#d8c27a',band:'#7a5a3a',hairCol:'#e8e4dc',brow:'#efece6',beard:'#efece6'},0,0,false);{const q=townPt(.5,10.2);oldman.x=oldman.hx=oldman.tx=q.x;oldman.z=oldman.hz=oldman.tz=q.z}oldman.old=true;
   const center=townIdx(0,3);if(!(sv&&sv.pl.some(p=>p[0]===center)))addPlaced('campfire',center);
-  if(sv){Object.assign(G,{tut:sv.tut||0,owned:sv.owned||{},flags:sv.flags||{},bpos:sv.bpos||{},day:sv.day,time:sv.time,coins:sv.coins,energy:sv.energy,hp:sv.hp??100,drink:sv.drink??100,inv:sv.inv,lv:sv.lv,water:sv.water,caught:sv.caught,quest:sv.quest,seedSel:sv.seedSel,buildSel:sv.buildSel});
+  if(sv){Object.assign(G,{tut:sv.tut||0,owned:sv.owned||{},flags:sv.flags||{},bpos:sv.bpos||{},day:sv.day,time:sv.time,coins:sv.coins,energy:sv.energy,hp:sv.hp??100,drink:sv.drink??100,inv:sv.inv,lv:sv.lv,water:sv.water,caught:sv.caught,quest:sv.quest,seedSel:sv.seedSel,buildSel:sv.buildSel,hb:(sv.hb&&sv.hb.length===HB_N)?sv.hb:HB_DEF(),tool:sv.tool||0});syncHB();
     for(const p of PROJECTS)if(sv.built[p.id])buildProject(p,false);
     for(const[k,s,w,ct,g]of sv.tiles){soil[k]=s;wet[k]=w;hideTuft(k);if(ct)plantCrop(k,ct,g);tileColor(k)}
     for(const[k,t,r]of sv.pl)addPlaced(t,k,r);PL.x=sv.px;PL.z=sv.pz}
@@ -1390,13 +1415,13 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last
     if(keys.KeyZ)camYaw+=dt*1.8;if(keys.KeyC)camYaw-=dt*1.8}
   const il=Math.hypot(ix,iz);PL.moving=il>.1;
   if(PL.moving){const fx=-Math.sin(camYaw),fz=-Math.cos(camYaw),rx=Math.cos(camYaw),rz=-Math.sin(camYaw);let mx=fx*iz+rx*ix,mz=fz*iz+rz*ix;const ml=Math.hypot(mx,mz);mx/=ml;mz/=ml;
-    const sp=(keys[SET.keys.run]||keys.ShiftRight?5.6:3.6)*Math.min(1,il)*(G.energy<=0?.6:1);moveEntity(PL,mx*sp*dt,mz*sp*dt,.28,PL.y);
+    PL.sprint=!!(keys[SET.keys.run]||keys.ShiftRight);const sp=(PL.sprint?5.6:3.6)*Math.min(1,il)*(G.energy<=0?.6:1);moveEntity(PL,mx*sp*dt,mz*sp*dt,.28,PL.y);
     let target=Math.atan2(mx,mz),d=target-PL.rot;d=Math.atan2(Math.sin(d),Math.cos(d));PL.rot+=d*Math.min(1,dt*14);PL.walk+=dt*sp*2.1;PL.speed=sp;if(fish.state!=='idle'&&fish.state!=='reel'){endFishing();toast('Đã thu cần.')}}
   if(PL.prep>0){PL.prep-=dt;if(PL.prep<=0){PL.prep=0;PL.vy=7.4;PL.ground=false;PL.y+=.02;SFX.swish()}}if(PL.land>0)PL.land-=dt;
   const gy=gH(PL.x,PL.z);PL.vy-=22*dt;PL.y+=PL.vy*dt;
   if(PL.y<=gy){if(!PL.ground&&PL.vy<-3){PL.land=.24;PL.landAmt=Math.min(1,.35-PL.vy/12);if(PL.vy<-4)burst(PL.x,gy+.05,PL.z,'#d8c49a',5,1);SFX.till()}PL.y=gy;PL.vy=0;PL.ground=true}else if(PL.ground&&PL.vy<=0&&PL.y-gy<.3){PL.y=gy;PL.vy=0}else PL.ground=false;
   if(PL.swing>0)PL.swing=Math.max(0,PL.swing-dt);
-  if(toolHold&&active&&!MOVE&&PL.swing<=0&&HOTBAR[G.tool].id!=='rod')useTool();
+  if(toolHold&&active&&!MOVE&&PL.swing<=0&&HOTBAR[G.tool].id!=='rod'&&!HOTBAR[G.tool].item&&!HOTBAR[G.tool].empty)useTool();
   player.g.position.set(PL.x,PL.y,PL.z);player.g.rotation.y=PL.rot;
   poseHuman(player,dt,{p:PL.walk,amp:PL.moving?Math.min(1.6,PL.speed/3.6):0,swing:PL.swing,air:!PL.ground,vy:PL.vy,prep:PL.prep>0?1-PL.prep/.1:0,land:PL.land>0?Math.sin(PL.land/.24*Math.PI)*PL.landAmt:0,act:PL.act,dur:PL.swingDur,fish:['wait','bite','fly','fail'].includes(fish.state),charge:fish.state==='charge',reel:fish.state==='reel',T});
   /* fishing */
@@ -1497,7 +1522,7 @@ DL.addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b){endDi
 /* ---------- cot truyen + huong dan ---------- */
 let oldman=null,boat=null,arrival=null;
 const BAY='Ông Bảy';
-const HB=id=>HOTBAR.findIndex(t=>t.id===id);
+function HB(id){let i=G.hb.indexOf(id);if(i<0){i=G.hb.indexOf('');if(i<0)i=G.tool;G.hb[i]=id;syncHB();toast(`${TOOLS[id]||id} được đưa vào ô ${i===9?0:i+1}.`)}return i}
 function own(...ids){for(const id of ids)G.owned[id]=1;hudDirty=true}
 const distTo=o=>o?Math.hypot(o.x-PL.x,o.z-PL.z):999;
 function wateredCrops(){let n=0;for(let k=0;k<N*N;k++)if(cropAt[k]&&wet[k])n++;return n}
