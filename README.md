@@ -29,6 +29,9 @@ Play online: https://thcphm.github.io/redgum-island/
 - Left mouse or F: use tool (hold to repeat) · Mouse wheel / 1–9, 0: switch slot
 - Hotbar is customizable: assign tools, food or drinks from the inventory, drag slots to reorder, right-click a slot to clear it
 - Running (Shift) drains energy twice as fast
+- Days run 7:00 to 23:00. Be at your tent by 23:00 or you faint and lose everything in your bag (tools are kept)
+- Hunger: without food, energy falls to 50% between 7:00 and 12:00
+- Bag: stacks hold up to 99. You start with 8 slots; craft a cloth backpack (16) and a leather backpack (24). Overflow drops on the ground
 - E: interact · G: move a building or placed item · I: inventory · M: music · Esc: settings
 
 The game text is in Vietnamese.

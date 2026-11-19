@@ -43,7 +43,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:#24180e;font-family:va
 .slot .k{position:absolute;top:1px;left:6px;font-size:12px;font-weight:800;color:var(--ink-2)}
 .slot .lb{font-size:11px;font-weight:700;line-height:1;margin-top:2px;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .slot .cnt{position:absolute;top:1px;right:6px;font-size:12px;font-weight:800}
-.slot.out{opacity:.55}.slot.out .em{filter:grayscale(1)}.slot[draggable=true]{cursor:grab}
+.slot.out{opacity:.55}.slot.out .em{filter:grayscale(1)}.slot[data-dnd]{cursor:grab}[data-drag]{cursor:grab}.dndghost{position:fixed;z-index:9999;pointer-events:none;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:12px;background:var(--paper-2);border:3px solid #e8913a;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 6px 16px rgba(0,0,0,.3);opacity:.92}.dndghost svg{width:34px;height:34px}.dndon{outline:3px solid #e8913a;outline-offset:2px}
+.cell.empty-slot{border:2px dashed #d9c08c;background:transparent;min-height:64px}
 .hbrow{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:8px;font-size:13px;font-weight:700;color:var(--ink-2)}.hbk{min-width:34px;height:34px;border-radius:8px;border:2px solid var(--bark);background:var(--paper-2);font:800 13px var(--f-ui);color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:2px;padding:0 5px}.hbk i{font-style:normal;font-size:12px}.hbk.on{background:#e8913a;color:#fff}.hbk.x{background:#e9d8c0}.ict svg{width:30px;height:30px}
 .slot .wb{position:absolute;left:8px;right:8px;bottom:4px;height:4px;border-radius:3px;background:#d9c08c;overflow:hidden}
 .slot .wb i{display:block;height:100%;background:#3d9bd6}
@@ -236,6 +237,7 @@ const ITEMS={
   fishcook:{n:'Cá nướng',i:'🍢',p:30,food:1,eat:{en:35,hp:10}}, pie:{n:'Bánh nhân thịt',i:'🥧',p:20,food:1,eat:{en:45,hp:15}},
   worm:{n:'Giun đất',i:'🪱',p:3}, shell:{n:'Vỏ sò',i:'🐚',p:8}, oldcoin:{n:'Đồng xu cổ',i:'🪙',p:60},
   t_pick:{n:'Cuốc chim',i:'⛏️',p:0}, t_rod:{n:'Cần câu',i:'🎣',p:0}, t_net:{n:'Vợt bắt bọ',i:'🥅',p:0},
+  bag1:{n:'Ba lô vải',i:'🎒',p:0}, bag2:{n:'Ba lô da',i:'🎒',p:0},
   campfire:{n:'Lửa trại',i:'🔥',p:20,place:1}, torch:{n:'Đuốc',i:'🕯️',p:5,place:1}, fence:{n:'Hàng rào',i:'🚧',p:6,place:1},
   path:{n:'Lát đá',i:'🧱',p:4,place:1}, sprinkler:{n:'Vòi tưới tự động',i:'💦',p:40,place:1}, scarecrow:{n:'Bù nhìn',i:'🧑‍🌾',p:15,place:1},
 };
@@ -260,6 +262,8 @@ const RECIPES=[
   {id:'t_pick',tool:'pick',req:{wood:4,stone:3},d:'Đập đá to, lấy quặng'},
   {id:'t_rod',tool:'rod',req:{wood:3,fiber:2},d:'Câu cá ở biển và ao'},
   {id:'t_net',tool:'net',req:{wood:2,fiber:3},d:'Bắt côn trùng'},
+  {id:'bag1',bag:1,req:{fiber:12,wood:4},d:'Túi đồ 8 → 16 ô'},
+  {id:'bag2',bag:2,req:{fiber:20,shell:6,ore:4},d:'Túi đồ 16 → 24 ô (cần Ba lô vải)'},
   {id:'campfire',req:{wood:5,stone:3},d:'Nấu cá, toả sáng ban đêm'},
   {id:'torch',req:{wood:1,fiber:1},d:'Đèn nhỏ cắm đường'},
   {id:'fence',req:{wood:3},d:'Rào ruộng cho gọn'},
@@ -304,7 +308,7 @@ const H=new Int8Array(N*N), BIO=new Uint8Array(N*N), DIRT=new Uint8Array(N*N); /
 const solid=new Uint8Array(N*N), soil=new Uint8Array(N*N), wet=new Uint8Array(N*N);
 const objAt=new Array(N*N).fill(null), bldAt=new Array(N*N).fill(null), placedAt=new Array(N*N).fill(null), cropAt=new Array(N*N).fill(null);
 const baseCol=[];
-const G={bpos:{},hp:100,drink:100,tut:0,owned:{},flags:{},day:1,time:840,coins:30,energy:100,inv:{},lv:{axe:1,pick:1,can:1,rod:1,net:1},water:20,built:{},caught:{},quest:null,seedSel:0,buildSel:null,tool:0,hb:HB_DEF()};syncHB();
+const G={bpos:{},hp:100,drink:100,tut:0,owned:{},flags:{},day:1,time:840,coins:30,energy:100,inv:{},lv:{axe:1,pick:1,can:1,rod:1,net:1},water:20,built:{},caught:{},quest:null,seedSel:0,buildSel:null,tool:0,hb:HB_DEF(),bag:0};syncHB();
 let running=false, uiOpen=null, paused=false;
 /* cai dat nguoi choi (luu localStorage) */
 const SET_DEF={vol:80,music:70,sfx:85,quality:'high',shadows:true,grass:true,fov:42,view:150,help:true,sens:50,invY:false,
@@ -736,6 +740,9 @@ const ACTS={
   seed:[[0,{}],[.42,{knL:.75,knR:.75,thL:-.55,thR:-.55,hipY:-.05,lean:.48,shR:-.9,elR:-.35,shL:-.3,hdX:.25}],[.62,{knL:.75,knR:.75,thL:-.55,thR:-.55,hipY:-.05,lean:.48,shR:-1.2,elR:-.1,shL:-.3,hdX:.25}],[1,{}]],
   rod:[[0,{shR:-1,elR:-.7,shL:-.7,elL:-.9}],[.42,{shR:-3,elR:-1.2,shL:-1.4,elL:-1,lean:-.12,spR:.3}],[.6,{shR:-1.1,elR:-.15,shL:-.9,elL:-.6,lean:.16,spR:-.1},'in'],[1,{shR:-1.05,elR:-.7,shL:-.75,elL:-.9}]],
   net:[[0,{shR:-1.2,elR:-.4,azR:.5,spR:.5}],[.35,{shR:-1.6,elR:-.6,azR:.75,spR:.95,hipR:.3}],[.6,{shR:-1.3,elR:-.1,azR:-.55,spR:-.75,lean:.15,hipR:-.25},'in'],[1,{shR:-.6,elR:-.3}]],
+  drink:[[0,{}],[.22,{shR:-1.9,elR:-1.6,azR:-.8,hdX:0}],[.4,{shR:-2.2,elR:-1.5,azR:-1.0,hnR:.4,hdX:-.3,lean:-.05}],[.82,{shR:-2.3,elR:-1.45,azR:-1.0,hnR:.5,hdX:-.36,lean:-.06}],[1,{}]],
+  eat:[[0,{}],[.2,{shR:-2.1,elR:-1.55,azR:-1.0,shL:-2.0,elL:-1.55,azL:1.0,hdX:.1}],[.35,{shR:-2.2,elR:-1.5,azR:-1.05,shL:-2.1,elL:-1.5,azL:1.05,hdX:-.02}],[.5,{shR:-2.1,elR:-1.55,azR:-1.0,shL:-2.0,elL:-1.55,azL:1.0,hdX:.1}],
+       [.65,{shR:-2.2,elR:-1.5,azR:-1.05,shL:-2.1,elL:-1.5,azL:1.05,hdX:-.02}],[.8,{shR:-2.1,elR:-1.55,azR:-1.0,shL:-2.0,elL:-1.55,azL:1.0,hdX:.1}],[1,{}]],
   build:[[0,{shR:-1.45,elR:-1.3,lean:.25,knL:.4,knR:.4,thL:-.3,thR:-.3,hipY:-.03}],[.3,{shR:-.75,elR:-.45,lean:.3,knL:.4,knR:.4,thL:-.3,thR:-.3,hipY:-.03},'in'],
        [.55,{shR:-1.45,elR:-1.3,lean:.25,knL:.4,knR:.4,thL:-.3,thR:-.3,hipY:-.03}],[.8,{shR:-.75,elR:-.45,lean:.3,knL:.4,knR:.4,thL:-.3,thR:-.3,hipY:-.03},'in'],[1,{}]],
 };
@@ -1000,7 +1007,24 @@ function applyDay(){const h=Math.min(26.9,hour());let a=DAYK[0],b=DAYK[DAYK.leng
 
 /* ---------- inventory helpers ---------- */
 const has=(id,n=1)=>(G.inv[id]||0)>=n;
-function give(id,n=1,silent){G.inv[id]=(G.inv[id]||0)+n;if(!silent)toast(`+${n} ${ITEMS[id].i} ${ITEMS[id].n}`);hudDirty=true}
+const STACK=99,BAGS=[{n:'Tay không',cap:8},{n:'Ba lô vải',cap:16},{n:'Ba lô da',cap:24}];
+const bagCap=()=>BAGS[G.bag||0].cap;
+function slotsUsed(ex){let u=0;for(const k in G.inv)if(k!==ex&&G.inv[k]>0)u+=Math.ceil(G.inv[k]/STACK);return u}
+function roomFor(id){return Math.max(0,(bagCap()-slotsUsed(id))*STACK-(G.inv[id]||0))}
+let fullT=0;
+function give(id,n=1,silent){const add=Math.min(n,roomFor(id));if(add>0){G.inv[id]=(G.inv[id]||0)+add;if(!silent)toast(`+${add} ${ITEMS[id].i} ${ITEMS[id].n}`)}
+  if(n>add){dropPile(id,n-add,PL.x,PL.z);if(performance.now()-fullT>2500){fullT=performance.now();toast(`Túi đầy (${bagCap()} ô)! ${n-add} ${ITEMS[id].n} để lại dưới đất. Làm ba lô ở Bàn chế tạo để mang nhiều hơn.`);SFX.err()}}
+  hudDirty=true;return add}
+/* dong do de lai duoi dat: di qua la nhat (neu tui con cho) */
+const piles=[];const pileGeo=(()=>{const g=new THREE.SphereGeometry(.2,10,8);g.scale(1,.75,1);g.translate(0,.13,0);return paint(g,()=>'#b08a55')})();
+function dropPile(id,n,x,z){let p=piles.find(q=>q.id===id&&Math.hypot(q.x-x,q.z-z)<1.2);if(p){p.n+=n;p.wait=true;return}
+  const m=mesh(pileGeo);const a=Math.random()*6.28;x+=Math.cos(a)*.6;z+=Math.sin(a)*.6;m.position.set(x,gH(x,z),z);scene.add(m);
+  const sp=emojiSprite(ITEMS[id].i);sp.position.y=.55;m.add(sp);piles.push({id,n,x,z,m,wait:true})}
+function pileUpdate(dt,T){for(let k=piles.length-1;k>=0;k--){const p=piles[k],d=Math.hypot(PL.x-p.x,PL.z-p.z);p.m.children[0].position.y=.55+Math.sin(T*3+k)*.05;
+  if(p.wait){if(d>1.6)p.wait=false;continue}if(d<1){const got=Math.min(p.n,roomFor(p.id));if(got>0){G.inv[p.id]=(G.inv[p.id]||0)+got;p.n-=got;floatText(`+${got} ${ITEMS[p.id].i}`,PL.x,PL.y+2,PL.z);SFX.pop();hudDirty=true}
+    if(p.n<=0){scene.remove(p.m);piles.splice(k,1)}else{p.wait=true;if(performance.now()-fullT>2500){fullT=performance.now();toast('Túi đầy, chưa nhặt hết được.')}}}}}
+const _emo={};function emojiTex(e){if(_emo[e])return _emo[e];const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');x.font='48px serif';x.textAlign='center';x.textBaseline='middle';x.fillText(e,32,36);return _emo[e]=new THREE.CanvasTexture(c)}
+function emojiSprite(e,s=.34){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:emojiTex(e),transparent:true,depthWrite:false}));sp.scale.set(s,s,s);return sp}
 function take(id,n=1){G.inv[id]-=n;if(G.inv[id]<=0)delete G.inv[id];hudDirty=true}
 function canPay(cost){for(const k in cost){if(k==='coins'?G.coins<cost[k]:!has(k,cost[k]))return false}return true}
 function pay(cost){for(const k in cost){if(k==='coins')G.coins-=cost[k];else take(k,cost[k])}hudDirty=true}
@@ -1009,10 +1033,15 @@ function sellPrice(id){const it=ITEMS[id];let p=it.p;if(it.cat==='fish'&&G.built
 function toast(t){const el=document.createElement('div');el.className='toast chip';el.textContent=t;const box=$('#toasts');box.appendChild(el);while(box.children.length>5)box.firstChild.remove();setTimeout(()=>el.remove(),3200)}
 const EMAX=()=>100+(G.built.home?20:0);
 function eatText(it){const e=it.eat||{};return[e.hp?`+${e.hp} ❤`:'',e.wt?`+${e.wt} 💧`:'',e.en?`+${e.en} ⚡`:''].filter(Boolean).join(' ')}
-function consume(id){const it=ITEMS[id],e=it.eat||{};take(id);G.hp=Math.min(100,G.hp+(e.hp||0));G.drink=Math.min(100,G.drink+(e.wt||0));G.energy=Math.min(EMAX(),G.energy+(e.en||0));
+let eatSp=null;
+function eatAnim(id){const it=ITEMS[id],dr=it.eat&&it.eat.wt&&!it.eat.en;startAct(dr?'drink':'eat');if(toolObj)toolObj.visible=false;
+  if(eatSp)player.hand.remove(eatSp);eatSp=emojiSprite(it.i,.3);eatSp.position.set(0,.04,.1);player.hand.add(eatSp);
+  const n=dr?3:4;for(let k=0;k<n;k++)setTimeout(()=>dr?tone(320-k*25,.09,'sine',.07,180):tone(900+Math.random()*300,.04,'square',.03),(dr?450:260)+k*(dr?230:170))}
+function eatUpdate(){if(eatSp&&!(PL.swing>0&&(PL.act==='eat'||PL.act==='drink'))){player.hand.remove(eatSp);eatSp=null;if(toolObj)toolObj.visible=true}}
+function consume(id){const it=ITEMS[id],e=it.eat||{};take(id);eatAnim(id);G.hp=Math.min(100,G.hp+(e.hp||0));G.drink=Math.min(100,G.drink+(e.wt||0));G.energy=Math.min(EMAX(),G.energy+(e.en||0));
   SFX.pop();toast(`${e.wt&&!e.en?'Uống':'Ăn'} ${it.n}: ${eatText(it)}`);hudDirty=true}
 let statWarn={};
-function statsUpdate(dt){const hrs=dt*2/60;G.drink=Math.max(0,G.drink-5*hrs);G.energy=Math.max(0,G.energy-2.5*hrs*(PL.sprint&&PL.moving?2:1));
+function statsUpdate(dt){const hrs=dt*2/60;G.drink=Math.max(0,G.drink-5*hrs);G.energy=Math.max(0,G.energy-EMAX()*.1*hrs*(PL.sprint&&PL.moving?2:1));
   let dh=-1;if(G.drink<=0)dh-=7;if(G.energy<=0)dh-=5;G.hp=Math.max(0,Math.min(100,G.hp+dh*hrs));
   for(const[k,v,m]of[['drink',G.drink,'Khát nước quá… Tìm ao suối hoặc uống dừa, chai nước.'],['energy',G.energy,'Đói và mệt rồi. Ăn gì đó đi.'],['hp',G.hp,'Máu thấp! Ăn uống ngay kẻo ngất.']]){if(v<20&&!statWarn[k]){statWarn[k]=1;toast(m);SFX.err()}if(v>30)statWarn[k]=0}
   if(G.hp<=0&&running)newDay('hp')}
@@ -1091,7 +1120,7 @@ function fallUpdate(dt){for(let n=falling.length-1;n>=0;n--){const f=falling[n];
   else{f.lt+=dt;if(f.lt>.45){f.m.position.lerp(_v.set(PL.x,PL.y+.8,PL.z),Math.min(1,dt*10));if(f.lt>.75){scene.remove(f.m);falling.splice(n,1);give(f.id,1,true);floatText(`+1 ${ITEMS[f.id].i}`,PL.x,PL.y+2,PL.z);SFX.pop()}}}}}
 function record(id){if(!G.caught[id]){G.caught[id]=1;toast(`Mới trong sổ sưu tầm: ${ITEMS[id].n}!`)}}
 
-const ACT_DUR={shovel:.66,axe:.62,pick:.62,hoe:.56,can:.7,seed:.5,rod:.58,net:.46,build:.44};
+const ACT_DUR={eat:1.15,drink:1.25,shovel:.66,axe:.62,pick:.62,hoe:.56,can:.7,seed:.5,rod:.58,net:.46,build:.44};
 function startAct(t){const d=ACT_DUR[t]||.4;PL.swing=d;PL.swingDur=d;PL.act=t}
 const atImpact=(f,at=.64)=>setTimeout(f,PL.swingDur*at*1000);
 function useTool(){
@@ -1174,11 +1203,13 @@ function toolHint(){const T0=HOTBAR[G.tool];if(T0.item){const it=ITEMS[T0.id];re
 /* ---------- day cycle ---------- */
 function newQuest(){const pool=[['wood',6,14],['stone',5,12],['berry',3,6],['f_perch',1,3],['fiber',3,6],['ore',2,4],['wheat',3,6],['tomato',2,5],['b_fly',1,2]];
   const[id,a,b]=pool[Math.floor(Math.random()*pool.length)];const q=ri(a,b);G.quest={id,q,reward:Math.round(ITEMS[id].p*q*1.8+25),done:false}}
+const DAY_START=7*60,DAY_END=23*60;
 function newDay(passOut){if(passOut===true)passOut='late';
-  running=false;const f=$('#fade');f.innerHTML=`Ngày ${G.day+1}<small>${passOut==='hp'?'Bạn kiệt sức ngất đi… Ông Bảy tìm thấy và đưa bạn về nghỉ.':passOut?'Bạn ngất vì thức quá khuya… Ông Bảy dìu bạn về nghỉ.':'Một ngày mới trên đảo'}</small>`;f.classList.add('on');
+  running=false;const f=$('#fade');f.innerHTML=`Ngày ${G.day+1}<small>${passOut==='hp'?'Bạn kiệt sức ngất đi… Ông Bảy tìm thấy và đưa bạn về nghỉ.':passOut?'23 giờ mà chưa về lều, bạn ngất giữa đường… Ông Bảy dìu bạn về, nhưng đồ trong túi rơi mất hết.':'Một ngày mới trên đảo'}</small>`;f.classList.add('on');
   setTimeout(()=>{
-    G.day++;G.time=360;const bonus=G.built.home?20:0;
-    if(passOut){const lost=Math.min(100,Math.floor(G.coins*.1));G.coins-=lost;G.energy=60;G.hp=Math.max(G.hp,50);G.drink=Math.max(G.drink,40);if(lost)toast(`Mất ${lost} xu tiền thuốc.`)}else{G.energy=100+bonus;G.hp=Math.min(100,G.hp+30);G.drink=Math.max(0,G.drink-15)}
+    G.day++;G.time=DAY_START;G.flags.w22=0;G.flags.w225=0;const bonus=G.built.home?20:0;
+    if(passOut==='late'){const n=Object.values(G.inv).reduce((a,v)=>a+v,0);G.inv={};invSel=null;if(n)setTimeout(()=>toast(`Mất hết ${n} món đồ trong túi. Dụng cụ vẫn còn.`),1800)}
+    if(passOut){const lost=passOut==='hp'?Math.min(100,Math.floor(G.coins*.1)):0;G.coins-=lost;G.energy=60;G.hp=Math.max(G.hp,50);G.drink=Math.max(G.drink,40);if(lost)toast(`Mất ${lost} xu tiền thuốc.`)}else{G.energy=100+bonus;G.hp=Math.min(100,G.hp+30);G.drink=Math.max(0,G.drink-15)}
     for(const s of sprinklers){const i=s.k%N,j=(s.k/N)|0;for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){if(!inb(i+di,j+dj))continue;const k=IDX(i+di,j+dj);if(soil[k]===1)wet[k]=2}}
     for(let k=0;k<N*N;k++){if(cropAt[k]&&wet[k]){const before=cropStage(cropAt[k]);cropAt[k].g++;if(cropStage(cropAt[k])!==before)setCropMesh(k)}
       if(wet[k]){wet[k]=0;tileColor(k)}const o=objAt[k];if(o&&o.type==='bush'&&!o.berries&&Math.random()<.5){o.berries=1;objMatrix(o)}if(o&&o.type==='palm'&&o.nuts<3&&Math.random()<.5)o.nuts=Math.min(3,(o.nuts||0)+1)}
@@ -1224,19 +1255,21 @@ function renderPanel(){let h='';if(uiOpen==='settings'){panel.innerHTML=settings
       if(!G.built.smith)h+='<p class="sub" style="margin-top:10px">Xây Lò rèn ở bảng thông báo để có dụng cụ bằng đồng.</p>'}
     else{const ids=Object.keys(G.inv).filter(id=>!ITEMS[id].place&&!ITEMS[id].seed);let total=0;ids.forEach(id=>total+=sellPrice(id)*G.inv[id]);
       h+=ids.length?`<div class="rows">${ids.map(id=>`<div class="row"><div class="ic">${ITEMS[id].i}</div><div class="nm">${ITEMS[id].n} ×${G.inv[id]}<small>${sellPrice(id)} xu mỗi cái</small></div><div class="acts"><button class="btn" data-a="sell" data-v="${id}" data-n="1" type="button">Bán 1</button><button class="btn" data-a="sell" data-v="${id}" data-n="all" type="button">Bán hết</button></div></div>`).join('')}</div><div class="detail"><b>Tổng: ${total} xu</b><button class="btn alt" data-a="sellall" type="button">Bán tất cả</button></div>`:'<p class="empty">Túi đang trống. Đi chặt cây, câu cá, bắt bọ rồi quay lại nhé.</p>'}}
-  else if(uiOpen==='bench'){h+=head('Bàn chế tạo','Gỗ, đá và quặng thành đồ dùng.')+'<div class="rows">'+RECIPES.map(r=>`<div class="row"><div class="ic">${ITEMS[r.id].i}</div><div class="nm">${ITEMS[r.id].n} <small>${r.d}${r.tool?(G.owned[r.tool]?' · đã có':''):' · đang có '+(G.inv[r.id]||0)}</small><small class="req">${reqHTML(r.req)}</small></div><div class="acts"><button class="btn" data-a="craft" data-v="${r.id}" type="button" ${canPay(r.req)&&!(r.tool&&G.owned[r.tool])?'':'disabled'}>${r.tool&&G.owned[r.tool]?'Đã có':'Làm'}</button></div></div>`).join('')+'</div><p class="sub" style="margin-top:10px">Đồ làm xong nằm trong túi. Chọn ô Xây dựng (phím 9) để đặt.</p>'}
+  else if(uiOpen==='bench'){h+=head('Bàn chế tạo','Gỗ, đá và quặng thành đồ dùng.')+'<div class="rows">'+RECIPES.map(r=>`<div class="row"><div class="ic">${ITEMS[r.id].i}</div><div class="nm">${ITEMS[r.id].n} <small>${r.d}${r.bag?((G.bag||0)>=r.bag?' · đã có':''):r.tool?(G.owned[r.tool]?' · đã có':''):' · đang có '+(G.inv[r.id]||0)}</small><small class="req">${reqHTML(r.req)}</small></div><div class="acts"><button class="btn" data-a="craft" data-v="${r.id}" type="button" ${canPay(r.req)&&!(r.tool&&G.owned[r.tool])&&!(r.bag&&(G.bag||0)!==r.bag-1)?'':'disabled'}>${(r.tool&&G.owned[r.tool])||(r.bag&&(G.bag||0)>=r.bag)?'Đã có':'Làm'}</button></div></div>`).join('')+'</div><p class="sub" style="margin-top:10px">Đồ làm xong nằm trong túi. Chọn ô Xây dựng (phím 9) để đặt.</p>'}
   else if(uiOpen==='board'){const q=G.quest;const built=PROJECTS.filter(p=>G.built[p.id]).length;
     h+=head('Bảng thông báo',`Thị trấn: ${1+built} cư dân · ${built}/${PROJECTS.length} công trình`);
     h+=`<div class="detail" style="margin:0 0 12px"><div><b>Yêu cầu hôm nay</b><div class="req">${q.done?'Đã hoàn thành. Quay lại ngày mai.':`Ông Bảy cần ${q.q} ${ITEMS[q.id].i} ${ITEMS[q.id].n} (đang có ${G.inv[q.id]||0}) · thưởng ${q.reward} xu`}</div></div>${q.done?'':`<button class="btn alt" data-a="quest" type="button" ${has(q.id,q.q)?'':'disabled'}>Giao hàng</button>`}</div>`;
     h+='<div class="rows">'+PROJECTS.map(p=>`<div class="row"><div class="ic">${G.built[p.id]?'✅':'🏗️'}</div><div class="nm">${p.n}<small>${p.d}</small>${G.built[p.id]?'':`<small class="req">${reqHTML(p.cost)}</small>`}</div><div class="acts">${G.built[p.id]?'<b>Đã xây</b>':`<button class="btn" data-a="proj" data-v="${p.id}" type="button" ${canPay(p.cost)?'':'disabled'}>Xây</button>`}</div></div>`).join('')+'</div>'}
-  else if(uiOpen==='sleep'){h+=head('Đi ngủ?',`Bây giờ là ${clock()}. Ngủ để sang ngày ${G.day+1}: cây được tưới sẽ lớn, sức hồi đầy, trò chơi tự lưu.`)+'<div class="detail" style="justify-content:flex-end"><button class="btn" data-a="close" type="button" style="background:#9a8a6a;box-shadow:0 3px 0 #6a5a3a">Chưa</button><button class="btn alt" data-a="sleep" type="button">Ngủ đến sáng</button></div>'}
+  else if(uiOpen==='sleep'){h+=head('Đi ngủ?',`Bây giờ là ${clock()}. Ngủ để sang ngày ${G.day+1} (thức dậy lúc 7 giờ): cây được tưới sẽ lớn, sức hồi đầy, trò chơi tự lưu. Nhớ: 23 giờ phải có mặt ở lều.`)+'<div class="detail" style="justify-content:flex-end"><button class="btn" data-a="close" type="button" style="background:#9a8a6a;box-shadow:0 3px 0 #6a5a3a">Chưa</button><button class="btn alt" data-a="sleep" type="button">Ngủ đến sáng</button></div>'}
   else if(uiOpen==='inv'){h+=head('Túi đồ',`${G.coins} xu · sức ${Math.round(G.energy)}`)+`<div class="tabs"><button class="tab ${invTab==='items'?'on':''}" data-a="itab" data-v="items" type="button">Đồ đạc</button><button class="tab ${invTab==='book'?'on':''}" data-a="itab" data-v="book" type="button">Sổ sưu tầm</button></div>`;
     if(invTab==='items'){const ids=Object.keys(G.inv).filter(id=>G.inv[id]>0),tl=Object.keys(TOOLS).filter(id=>G.owned[id]);
       h+=`<p class="sub">Chọn món rồi bấm số ô bên dưới, hoặc kéo thả thẳng xuống thanh nhanh. Chuột phải lên ô để bỏ trống.</p>`;
-      if(tl.length)h+=`<div class="grid">${tl.map(id=>`<button class="cell ${invSel===id?'sel':''}" data-a="isel" data-v="${id}" draggable="true" data-drag="${id}" type="button"><span class="ic ict">${ICON[id]}</span>${TOOLS[id]}<br>${G.hb.includes(id)?'ô '+((G.hb.indexOf(id)+1)%10):'chưa gán'}</button>`).join('')}</div>`;
-      h+=ids.length?`<div class="grid">${ids.map(id=>`<button class="cell ${invSel===id?'sel':''}" data-a="isel" data-v="${id}" ${ITEMS[id].food?`draggable="true" data-drag="${id}"`:''} type="button"><span class="ic">${ITEMS[id].i}</span>${ITEMS[id].n}<br>×${G.inv[id]}</button>`).join('')}</div>`:'<p class="empty">Chưa có gì.</p>';
+      if(tl.length)h+=`<div class="grid">${tl.map(id=>`<button class="cell ${invSel===id?'sel':''}" data-a="isel" data-v="${id}" draggable="false" data-drag="${id}" type="button"><span class="ic ict">${ICON[id]}</span>${TOOLS[id]}<br>${G.hb.includes(id)?'ô '+((G.hb.indexOf(id)+1)%10):'chưa gán'}</button>`).join('')}</div>`;
+      const used=slotsUsed(),cap=bagCap(),cells=[];for(const id of ids){let c=G.inv[id];while(c>0){const q=Math.min(STACK,c);c-=q;cells.push(`<button class="cell ${invSel===id?'sel':''}" data-a="isel" data-v="${id}" draggable="false" ${ITEMS[id].food?`data-drag="${id}"`:''} type="button"><span class="ic">${ITEMS[id].i}</span>${ITEMS[id].n}<br>×${q}</button>`)}}
+      for(let k=used;k<cap;k++)cells.push('<div class="cell empty-slot"></div>');
+      h+=`<p class="sub"><b>${BAGS[G.bag||0].n}</b>: ${used}/${cap} ô · mỗi ô tối đa ${STACK}</p><div class="grid">${cells.join('')}</div>`;
       if(invSel&&TOOLS[invSel]&&G.owned[invSel])h+=`<div class="detail"><div><b>${TOOLS[invSel]}</b><div class="req">Dụng cụ</div></div></div>${hbRow(invSel)}`;
-      if(invSel&&G.inv[invSel]){const it=ITEMS[invSel];h+=`<div class="detail"><div><b>${it.i} ${it.n}</b><div class="req">Bán được ${sellPrice(invSel)} xu${it.food?` · ${eatText(it)}`:''}</div></div><div class="acts">${it.food?`<button class="btn alt" data-a="eat" data-v="${invSel}" type="button">${it.eat&&it.eat.wt&&!it.eat.en?'Uống':'Ăn'}</button>`:''}${it.place?`<button class="btn" data-a="place" data-v="${invSel}" type="button">Đặt xuống</button>`:''}${it.seed?`<button class="btn" data-a="seedsel" data-v="${invSel}" type="button">Cầm hạt này</button>`:''}</div></div>${it.food?hbRow(invSel):''}`}}
+      if(invSel&&G.inv[invSel]){const it=ITEMS[invSel];h+=`<div class="detail"><div><b>${it.i} ${it.n}</b><div class="req">Bán được ${sellPrice(invSel)} xu${it.food?` · ${eatText(it)}`:''}</div></div><div class="acts">${it.food?`<button class="btn alt" data-a="eat" data-v="${invSel}" type="button">${it.eat&&it.eat.wt&&!it.eat.en?'Uống':'Ăn'}</button>`:''}${it.place?`<button class="btn" data-a="place" data-v="${invSel}" type="button">Đặt xuống</button>`:''}<button class="btn alt" data-a="drop" data-v="${invSel}" type="button">Bỏ xuống</button>${it.seed?`<button class="btn" data-a="seedsel" data-v="${invSel}" type="button">Cầm hạt này</button>`:''}</div></div>${it.food?hbRow(invSel):''}`}}
     else{const all=[...FISH.map(f=>f.id),...Object.keys(BUGS)];const n=all.filter(id=>G.caught[id]).length;h+=`<p class="sub">Đã tìm thấy ${n}/${all.length} loài.</p><div class="grid">${all.map(id=>G.caught[id]?`<div class="cell"><span class="ic">${ITEMS[id].i}</span>${ITEMS[id].n}<br>${ITEMS[id].p} xu</div>`:`<div class="cell unk"><span class="ic">❔</span>${ITEMS[id].cat==='fish'?'Cá':'Côn trùng'} chưa rõ</div>`).join('')}</div>`}}
   panel.innerHTML=h}
 panel.addEventListener('input',e=>{const k=e.target.dataset.set;if(!k)return;SET[k]=+e.target.value;const o=$('#out-'+k);if(o)o.textContent=SET[k]+({vol:'%',music:'%',sfx:'%',fov:'°'}[k]||'');applySet();saveSet()});
@@ -1246,15 +1279,16 @@ panel.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b
   if(a==='sreset'){SET=JSON.parse(JSON.stringify(SET_DEF));applySet();saveSet();renderPanel();return}
   if(a==='close')return closePanel();
   if(a==='stab')shopTab=v;if(a==='itab')invTab=v;if(a==='isel')invSel=v;if(a==='hbset'){const[sl,id]=v.split('|');hbAssign(+sl,id)}if(a==='hbclr')hbClear(+v);
-  if(a==='buy'){const n=+b.dataset.n,p=+b.dataset.p;if(G.coins>=p*n){G.coins-=p*n;give(v,n);SFX.coin()}}
+  if(a==='buy'){const n=+b.dataset.n,p=+b.dataset.p;if(roomFor(v)<n){toast('Túi đầy, không mua thêm được.');SFX.err()}else if(G.coins>=p*n){G.coins-=p*n;give(v,n);SFX.coin()}}
   if(a==='up'){const u=shopBuyList().U.find(x=>x.u===v);if(u&&canPay(u.cost)){pay(u.cost);G.lv[v]=2;if(v==='can')G.water=40;toast(`Nâng cấp: ${u.n}!`);SFX.catch();refreshToolMesh()}}
   if(a==='sell'){G.flags.sold=1;const n=b.dataset.n==='all'?G.inv[v]:1;const g=sellPrice(v)*n;take(v,n);G.coins+=g;SFX.coin();toast(`+${g} xu`)}
   if(a==='sellall'){G.flags.sold=1;let g=0;for(const id of Object.keys(G.inv)){if(ITEMS[id].place||ITEMS[id].seed)continue;g+=sellPrice(id)*G.inv[id];delete G.inv[id]}G.coins+=g;SFX.coin();toast(`+${g} xu`);hudDirty=true}
-  if(a==='craft'){const r=RECIPES.find(x=>x.id===v);if(r.tool){if(!G.owned[r.tool]&&canPay(r.req)){pay(r.req);own(r.tool);G.tool=HB(r.tool);refreshToolMesh();toast(`Đã làm ${ITEMS[r.id].n}!`);SFX.catch()}}else if(canPay(r.req)){pay(r.req);give(v);SFX.build();if(!G.buildSel)G.buildSel=v}}
+  if(a==='craft'){const r=RECIPES.find(x=>x.id===v);if(r.bag){if((G.bag||0)===r.bag-1&&canPay(r.req)){pay(r.req);G.bag=r.bag;toast(`Đã làm ${ITEMS[r.id].n}! Túi giờ chứa ${bagCap()} ô.`);SFX.catch();save()}}else if(r.tool){if(!G.owned[r.tool]&&canPay(r.req)){pay(r.req);own(r.tool);G.tool=HB(r.tool);refreshToolMesh();toast(`Đã làm ${ITEMS[r.id].n}!`);SFX.catch()}}else if(canPay(r.req)){pay(r.req);give(v);SFX.build();if(!G.buildSel)G.buildSel=v}}
   if(a==='quest'){const q=G.quest;if(has(q.id,q.q)){take(q.id,q.q);G.coins+=q.reward;q.done=true;SFX.catch();toast(`Ông Bảy trả ${q.reward} xu. Cảm ơn cháu!`)}}
   if(a==='proj'){const p=PROJECTS.find(x=>x.id===v);if(canPay(p.cost)){pay(p.cost);buildProject(p,true);save()}}
   if(a==='sleep'){closePanel();newDay(false);return}
   if(a==='eat'){consume(v)}
+  if(a==='drop'){const n=Math.min(STACK,G.inv[v]||0);if(n>0){take(v,n);dropPile(v,n,PL.x,PL.z);toast(`Bỏ ${n} ${ITEMS[v].n} xuống đất.`);if(!G.inv[v])invSel=null}}
   if(a==='place'){G.buildSel=v;G.tool=HB('build');refreshToolMesh();hudDirty=true;return closePanel()}
   if(a==='seedsel'){G.seedSel=SEEDS.indexOf(v);G.tool=HB('seed');refreshToolMesh();hudDirty=true;return closePanel()}
   hudDirty=true;renderPanel()});
@@ -1271,11 +1305,24 @@ function renderHotbar(){$('#hotbar').innerHTML=HOTBAR.map((t,s)=>{let inner=t.em
   if(t.id==='seed'){const sid=SEEDS[G.seedSel];extra=`<span class="cnt">${G.inv[sid]||0}</span>`;lb=ITEMS[sid].n.replace('Hạt ','')}
   if(t.id==='build'&&G.buildSel){inner=`<span class="em">${ITEMS[G.buildSel].i}</span>`;extra=`<span class="cnt">${G.inv[G.buildSel]||0}</span>`;lb=ITEMS[G.buildSel].n}
   if(t.id==='can')extra=`<span class="wb"><i style="width:${G.water/(20*G.lv.can)*100}%"></i></span>`;
-  const lk=!hbOwn(t),out=t.item&&!(G.inv[t.id]>0);return`<button class="slot ${G.tool===s&&!lk?'on':''} ${lk?'lock':''} ${out?'out':''}" data-s="${s}" draggable="${t.empty?'false':'true'}" type="button" aria-label="${t.n}"><span class="k">${s===9?0:s+1}</span>${inner}<span class="lb">${t.empty?'Trống':lk?'Chưa có':lb}</span>${lk?'':extra}</button>`}).join('')}
+  const lk=!hbOwn(t),out=t.item&&!(G.inv[t.id]>0);return`<button class="slot ${G.tool===s&&!lk?'on':''} ${lk?'lock':''} ${out?'out':''}" data-s="${s}" draggable="false" ${t.empty?'':'data-dnd="1"'} type="button" aria-label="${t.n}"><span class="k">${s===9?0:s+1}</span>${inner}<span class="lb">${t.empty?'Trống':lk?'Chưa có':lb}</span>${lk?'':extra}</button>`}).join('')}
 /* keo tha: doi cho 2 o tren thanh, hoac keo do tu Tui do vao o */
 function hbAssign(slot,id){const old=G.hb.indexOf(id),cur=HOTBAR[G.tool]&&HOTBAR[G.tool].id;if(old>=0)G.hb[old]=G.hb[slot];G.hb[slot]=id;syncHB();
   const ns=G.hb.indexOf(cur);G.tool=ns>=0?ns:slot;if(HOTBAR[G.tool].id!=='rod')endFishing();refreshToolMesh();hudDirty=true;renderHotbar();save()}
 function hbClear(slot){const id=G.hb[slot];if(!id)return;G.hb[slot]='';syncHB();if(G.tool===slot)refreshToolMesh();hudDirty=true;renderHotbar();save()}
+/* keo tha bang pointer: tu o trong Tui do / thanh nhanh -> o thanh nhanh hoac nut so 'Gan vao o' */
+let DND=null,dndEat=false;
+function dndTarget(x,y){for(const el of document.elementsFromPoint(x,y)){const t=el.closest&&el.closest('#hotbar .slot,.hbk:not(.x)');if(t)return t}return null}
+document.addEventListener('pointerdown',e=>{if(e.button!==0)return;const src=e.target.closest('#hotbar .slot[data-dnd],#panel [data-drag]');if(!src)return;
+  DND={src,x:e.clientX,y:e.clientY,d:src.dataset.drag?'it:'+src.dataset.drag:'hb:'+src.dataset.s,on:false,el:null,tg:null}},true);
+document.addEventListener('pointermove',e=>{if(!DND)return;if(!DND.on){if(Math.hypot(e.clientX-DND.x,e.clientY-DND.y)<7)return;DND.on=true;
+    const g=document.createElement('div');g.className='dndghost';const ic=DND.src.querySelector('.em,.ic,svg');g.innerHTML=ic?(ic.tagName.toLowerCase()==='svg'?ic.outerHTML:ic.innerHTML):'';document.body.appendChild(g);DND.el=g}
+  DND.el.style.left=e.clientX+'px';DND.el.style.top=e.clientY+'px';const t=dndTarget(e.clientX,e.clientY);if(t!==DND.tg){if(DND.tg)DND.tg.classList.remove('dndon');DND.tg=t;if(t)t.classList.add('dndon')}},true);
+document.addEventListener('pointerup',e=>{const D=DND;DND=null;if(!D||!D.on)return;D.el.remove();if(D.tg)D.tg.classList.remove('dndon');dndEat=true;setTimeout(()=>dndEat=false,0);
+  const t=dndTarget(e.clientX,e.clientY);if(!t)return;const to=t.classList.contains('hbk')?+t.dataset.v.split('|')[0]:+t.dataset.s;
+  if(D.d.startsWith('hb:')){const fr=+D.d.slice(3);if(fr===to)return;const cur=HOTBAR[G.tool].id;[G.hb[fr],G.hb[to]]=[G.hb[to],G.hb[fr]];syncHB();const ns=G.hb.indexOf(cur);if(ns>=0)G.tool=ns;hudDirty=true;renderHotbar();save()}
+  else hbAssign(to,D.d.slice(3));SFX.pop();if(uiOpen==='inv')renderPanel()},true);
+document.addEventListener('click',e=>{if(dndEat){e.stopPropagation();e.preventDefault();dndEat=false}},true);
 $('#hotbar').addEventListener('dragstart',e=>{const b=e.target.closest('.slot');if(!b)return;e.dataTransfer.setData('text/plain','hb:'+b.dataset.s);e.dataTransfer.effectAllowed='move'});
 $('#hotbar').addEventListener('dragover',e=>{if(e.target.closest('.slot')){e.preventDefault();e.dataTransfer.dropEffect='move'}});
 $('#hotbar').addEventListener('drop',e=>{const b=e.target.closest('.slot');if(!b)return;e.preventDefault();const d=e.dataTransfer.getData('text/plain'),to=+b.dataset.s;
@@ -1381,7 +1428,7 @@ function confirmMove(){const M=MOVE;if(!M)return;if(!M.ok){toast('Không đặt 
 /* ---------- save/load ---------- */
 function serialize(){const objs=[],tiles=[],pl=[];for(let k=0;k<N*N;k++){const o=objAt[k];if(o)objs.push([k,o.type,o.berries,+o.rot.toFixed(2),+o.sc.toFixed(2)]);
   if(soil[k]===1||cropAt[k])tiles.push([k,soil[k],wet[k],cropAt[k]?cropAt[k].type:0,cropAt[k]?cropAt[k].g:0]);if(placedAt[k])pl.push([k,placedAt[k].type,placedAt[k].rot])}
-  return{v:4,tut:G.tut,owned:G.owned,flags:G.flags,bpos:G.bpos,seed:SEED,day:G.day,time:G.time,coins:G.coins,energy:G.energy,hp:G.hp,drink:G.drink,inv:G.inv,lv:G.lv,water:G.water,built:G.built,caught:G.caught,quest:G.quest,seedSel:G.seedSel,buildSel:G.buildSel,hb:G.hb,tool:G.tool,px:PL.x,pz:PL.z,objs,tiles,pl}}
+  return{v:4,tut:G.tut,owned:G.owned,flags:G.flags,bpos:G.bpos,seed:SEED,day:G.day,time:G.time,coins:G.coins,energy:G.energy,hp:G.hp,drink:G.drink,inv:G.inv,lv:G.lv,water:G.water,built:G.built,caught:G.caught,quest:G.quest,seedSel:G.seedSel,buildSel:G.buildSel,hb:G.hb,tool:G.tool,bag:G.bag,px:PL.x,pz:PL.z,objs,tiles,pl}}
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(serialize()))}catch(e){}}
 function loadSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));return s&&s.v===4?s:null}catch(e){return null}}
 window.claude?.hot?.snapshot?.(()=>serialize());
@@ -1395,7 +1442,7 @@ function buildWorld(sv){
   buildPier();addBuilding('shack',3,11,'shack');
   oldman=addNPC('bay','Ông Bảy',{shirt:'#8a9a7a',pants:'#5a4a3a',skin:'#d9a57a',hat:'#d8c27a',band:'#7a5a3a',hairCol:'#e8e4dc',brow:'#efece6',beard:'#efece6'},0,0,false);{const q=townPt(.5,10.2);oldman.x=oldman.hx=oldman.tx=q.x;oldman.z=oldman.hz=oldman.tz=q.z}oldman.old=true;
   const center=townIdx(0,3);if(!(sv&&sv.pl.some(p=>p[0]===center)))addPlaced('campfire',center);
-  if(sv){Object.assign(G,{tut:sv.tut||0,owned:sv.owned||{},flags:sv.flags||{},bpos:sv.bpos||{},day:sv.day,time:sv.time,coins:sv.coins,energy:sv.energy,hp:sv.hp??100,drink:sv.drink??100,inv:sv.inv,lv:sv.lv,water:sv.water,caught:sv.caught,quest:sv.quest,seedSel:sv.seedSel,buildSel:sv.buildSel,hb:(sv.hb&&sv.hb.length===HB_N)?sv.hb:HB_DEF(),tool:sv.tool||0});syncHB();
+  if(sv){Object.assign(G,{tut:sv.tut||0,owned:sv.owned||{},flags:sv.flags||{},bpos:sv.bpos||{},day:sv.day,time:sv.time,coins:sv.coins,energy:sv.energy,hp:sv.hp??100,drink:sv.drink??100,inv:sv.inv,lv:sv.lv,water:sv.water,caught:sv.caught,quest:sv.quest,seedSel:sv.seedSel,buildSel:sv.buildSel,hb:(sv.hb&&sv.hb.length===HB_N)?sv.hb:HB_DEF(),tool:sv.tool||0,bag:sv.bag||0});syncHB();
     for(const p of PROJECTS)if(sv.built[p.id])buildProject(p,false);
     for(const[k,s,w,ct,g]of sv.tiles){soil[k]=s;wet[k]=w;hideTuft(k);if(ct)plantCrop(k,ct,g);tileColor(k)}
     for(const[k,t,r]of sv.pl)addPlaced(t,k,r);PL.x=sv.px;PL.z=sv.pz}
@@ -1409,7 +1456,10 @@ function buildWorld(sv){
 let last=performance.now(),T=0,hintT=0,ambT=3,lightT=0;const _v=new V3();
 function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;
   const active=running&&!uiOpen;
-  if(active){G.time+=dt*2;statsUpdate(dt);if(G.time>=26*60){newDay('late')}}
+  if(active){G.time+=dt*2;statsUpdate(dt);
+    if(G.time>=22*60&&!G.flags.w22){G.flags.w22=1;toast('22 giờ rồi. 23 giờ phải về tới lều, không thì ngất và mất hết đồ trong túi!');SFX.err()}
+    if(G.time>=22.5*60&&!G.flags.w225){G.flags.w225=1;toast('Còn 30 phút nữa là 23 giờ. Về lều ngay!');SFX.err()}
+    if(G.time>=DAY_END){const b=bld('bed')||bld('shack');if(b&&Math.hypot(PL.x-b.x,PL.z-b.z)<4.5)newDay(false);else newDay('late')}}
   /* player */
   let ix=0,iz=0;if(active){const K=SET.keys;if(keys[K.up]||keys.ArrowUp)iz+=1;if(keys[K.down]||keys.ArrowDown)iz-=1;if(keys[K.left]||keys.ArrowLeft)ix-=1;if(keys[K.right]||keys.ArrowRight)ix+=1;ix+=joy.x;iz+=joy.y;
     if(keys.KeyZ)camYaw+=dt*1.8;if(keys.KeyC)camYaw-=dt*1.8}
@@ -1425,7 +1475,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last
   player.g.position.set(PL.x,PL.y,PL.z);player.g.rotation.y=PL.rot;
   poseHuman(player,dt,{p:PL.walk,amp:PL.moving?Math.min(1.6,PL.speed/3.6):0,swing:PL.swing,air:!PL.ground,vy:PL.vy,prep:PL.prep>0?1-PL.prep/.1:0,land:PL.land>0?Math.sin(PL.land/.24*Math.PI)*PL.landAmt:0,act:PL.act,dur:PL.swingDur,fish:['wait','bite','fly','fail'].includes(fish.state),charge:fish.state==='charge',reel:fish.state==='reel',T});
   /* fishing */
-  fishingUpdate(dt,T);fallUpdate(dt);moveUpdate();
+  fishingUpdate(dt,T);fallUpdate(dt);moveUpdate();pileUpdate(dt,T);eatUpdate();
   /* npcs */
   for(const n of npcs){let mv=false;if(n.wander){n.wait-=dt;if(n.wait<=0){const dx=n.tx-n.x,dz=n.tz-n.z,d=Math.hypot(dx,dz);if(d<.15){n.wait=2+Math.random()*4;n.tx=n.hx+(Math.random()-.5)*7;n.tz=n.hz+(Math.random()-.5)*5}
       else{const s=1.4*dt;const ox=n.x,oz=n.z;moveEntity(n,dx/d*s,dz/d*s,.2);if(Math.abs(n.x-ox)+Math.abs(n.z-oz)<s*.3){n.tx=n.x;n.tz=n.z}n.rot=Math.atan2(dx,dz);n.walk+=dt*3.6;mv=true}}}
