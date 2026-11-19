@@ -54,6 +54,15 @@ html,body{height:100%;margin:0;overflow:hidden;background:#24180e;font-family:va
 #help[hidden]{display:none}
 .helpbox{display:flex;flex-direction:column;gap:6px;margin-top:6px}.hrow{display:grid;grid-template-columns:minmax(150px,auto) 1fr;gap:10px;align-items:center;font-size:14px;color:var(--ink)}.hk{display:flex;flex-wrap:wrap;gap:3px}
 #panelWrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(36,24,14,.35);padding:16px;box-sizing:border-box}
+#panel.credp{position:relative;width:min(560px,100%);max-height:min(88vh,720px);background:#fbf5e2 radial-gradient(circle at 50% 55%,rgba(240,200,90,.13),transparent 70%);border:6px solid #f2c230;border-radius:18px;box-shadow:0 10px 0 rgba(120,80,10,.35),0 24px 60px rgba(0,0,0,.35);padding:22px 28px 22px;text-align:center;color:#4a3a28}
+.crc .crx{position:absolute;top:10px;left:10px}
+.crlic{position:absolute;top:12px;right:12px;padding:7px 14px;border-radius:10px;border:0;background:#2c1a0e;color:#fff4dc;font:700 14px var(--f-ui);cursor:pointer}.crlic:hover{background:#4a2c18}
+.crlogo{margin:8px 0 14px;font:800 44px/1 var(--f-ui);color:#f4c640;-webkit-text-stroke:2px #5a2e12;paint-order:stroke fill;text-shadow:0 4px 0 #5a2e12}
+.crlogo span{color:#7ccf6a}.crlogo small{display:block;margin-top:6px;font:800 12px var(--f-ui);letter-spacing:.4em;color:#8a6a40;-webkit-text-stroke:0;text-shadow:none}
+.crs{margin:0 0 16px}.crs h3{margin:0 0 4px;font:800 17px var(--f-ui);color:#3a2a1a;letter-spacing:.02em}.crs p{margin:0;font:500 15px/1.5 var(--f-ui);color:#5a4a36}
+.crcols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.crnote{margin:6px 0 0;font:500 12.5px/1.5 var(--f-ui);color:#6a5a44}
+@media (max-width:520px){#panel.credp{padding:20px 16px}.crlogo{font-size:34px;margin-top:30px}.crcols{grid-template-columns:1fr}}
 #panel{width:min(600px,100%);max-height:min(80vh,680px);overflow:auto;background:var(--paper);border:4px solid var(--bark);border-radius:20px;box-shadow:0 8px 0 rgba(58,39,21,.5);padding:18px 20px 20px;box-sizing:border-box}
 #panel h2{margin:0;font-size:28px;line-height:1.1;font-weight:800;text-wrap:balance}
 #panel .sub{margin:2px 0 12px;color:var(--ink-2);font-weight:600}
@@ -1504,7 +1513,8 @@ function settingsHTML(){let h=head('Cài đặt','Thiết lập được lưu t�
   else h+=sld('sens','Độ nhạy chuột',10,100)+tog('invY','Đảo trục dọc camera')+Object.keys(KEYN).map(k=>`<div class="srow"><label>${KEYN[k]}</label><button class="kb ${REBIND===k?'wait':''}" data-a="bind" data-v="${k}" type="button">${REBIND===k?'Bấm phím…':keyName(SET.keys[k])}</button><span></span></div>`).join('')
     +'<p class="sub" style="margin-top:8px">Bấm vào ô phím rồi nhấn phím mới. Esc để huỷ. Phím mũi tên luôn dùng để di chuyển.</p>';
   return h+'<div class="detail" style="justify-content:flex-end"><button class="btn" data-a="sreset" type="button" style="background:#9a8a6a;box-shadow:0 3px 0 #6a5a3a">Khôi phục mặc định</button><button class="btn alt" data-a="close" type="button">Xong</button></div>'}
-function renderPanel(){let h='';if(uiOpen==='settings'){panel.innerHTML=settingsHTML();return}
+let CRLIC=false;
+function renderPanel(){let h='';panel.classList.toggle('credp',uiOpen==='credits');if(uiOpen!=='credits')CRLIC=false;if(uiOpen==='settings'){panel.innerHTML=settingsHTML();return}
   if(uiOpen==='shop'){h+=head('Ông Bảy mua bán','Ông mua mọi thứ cháu kiếm được trên đảo.')+`<div class="tabs"><button class="tab ${shopTab==='buy'?'on':''}" data-a="stab" data-v="buy" type="button">Mua</button><button class="tab ${shopTab==='sell'?'on':''}" data-a="stab" data-v="sell" type="button">Bán</button></div>`;
     if(shopTab==='buy'){const{L,U}=shopBuyList();h+='<div class="rows">'+L.map(x=>`<div class="row"><div class="ic">${ITEMS[x.id].i}</div><div class="nm">${ITEMS[x.id].n}<small>${x.p} xu · đang có ${G.inv[x.id]||0}${ITEMS[x.id].seed?` · lớn trong ${CROPS[ITEMS[x.id].seed].days} ngày`:ITEMS[x.id].food?` · ${eatText(ITEMS[x.id])}`:''}</small></div><div class="acts"><button class="btn" data-a="buy" data-v="${x.id}" data-p="${x.p}" data-n="1" type="button" ${G.coins<x.p?'disabled':''}>Mua 1</button><button class="btn" data-a="buy" data-v="${x.id}" data-p="${x.p}" data-n="5" type="button" ${G.coins<x.p*5?'disabled':''}>Mua 5</button></div></div>`).join('')
       +U.map(u=>`<div class="row"><div class="ic">${u.i}</div><div class="nm">${u.n}<small>${u.d}</small><small class="req">${reqHTML(u.cost)}</small></div><div class="acts"><button class="btn alt" data-a="up" data-v="${u.u}" type="button" ${canPay(u.cost)?'':'disabled'}>Nâng cấp</button></div></div>`).join('')+'</div>';
@@ -1530,9 +1540,19 @@ function renderPanel(){let h='';if(uiOpen==='settings'){panel.innerHTML=settings
     else if(tab==='diary'){const L=JOURNAL.slice(0,Math.max(1,G.jn||1));h+=L.map(j=>`<div class="detail" style="display:block;margin-bottom:8px"><b>📔 ${j[1]}</b><div class="req" style="margin-top:4px;line-height:1.5">${j[2]}</div></div>`).join('')+(G.letters?`<p class="sub">Đã nhặt ${G.letters} lá thư trôi dạt.</p>`:'')+(JOURNAL.length>(G.jn||1)?`<p class="sub">Trang tiếp theo mở khi Bình yên đạt ${JOURNAL[G.jn||1][0]}.</p>`:'')}
     else h+=`<div class="detail" style="display:block;line-height:1.6"><b>🍃 Bình yên là gì?</b><div class="req">Bạn bỏ phố về đảo để chữa lành. Bình yên tăng khi bạn sống chậm: ngồi ngắm bình minh, hoàng hôn, ngắm sao (đứng yên hoặc bấm ${keyName(SET.keys.sit||'KeyV')} để ngồi), sưởi bên lửa trại, vuốt ve thú cưng và vật nuôi, cho thú hoang ăn, nấu ăn, câu cá, tặng bảo tàng, đọc thư trôi dạt. Ngất xỉu làm Bình yên giảm mạnh.</div>
       <div class="req" style="margin-top:8px">${[[25,'Bước chân nhẹ: đi nhanh hơn 5%'],[50,'Thong thả: tốn sức ít hơn 20%'],[75,'Kiên nhẫn: cá hiếm cắn câu nhiều hơn'],[100,'Tâm an: hồi thêm 10 máu mỗi sáng']].map(([v,t])=>`${(G.calm||0)>=v?'✅':'▫️'} ${v}: ${t}`).join('<br>')}</div></div>`}
-  else if(uiOpen==='credits'){h+=head('Ghi công','Đảo Bình Yên · Serene Isle')+`<div class="detail" style="display:block;line-height:1.7"><b>Ý tưởng, thiết kế và phát triển</b><div style="font-size:22px;font-weight:800;color:var(--red)">Thuc Pham</div>
-      <div class="req" style="margin-top:8px">Đồ hoạ 3D: Three.js · Âm nhạc lofi tạo theo thủ tục bằng Web Audio</div>
-      <div class="req" style="margin-top:8px">Cảm ơn bạn đã ghé đảo. Mong bạn tìm được chút bình yên ở đây. 🍃</div></div>`}
+  else if(uiOpen==='credits'){h+=`<div class="crc">
+    <button class="x crx" data-a="close" type="button" aria-label="Đóng">✕</button>
+    <button class="crlic" data-a="crlic" type="button">${CRLIC?'Ghi công':'Giấy phép'}</button>
+    <div class="crlogo"><span>Đảo</span> Bình Yên<small>SERENE ISLE</small></div>
+    ${CRLIC?`<div class="crs"><h3>Three.js</h3><p>Thư viện đồ hoạ 3D, giấy phép MIT.<br>Copyright © 2010–2021 three.js authors.</p></div>
+    <div class="crs"><h3>Đảo Bình Yên</h3><p>Mã nguồn công khai trên GitHub: thcphm/serene-isle.<br>Âm thanh và hình khối đều được tạo ngay trong trình duyệt.</p></div>
+    <p class="crnote">Được cấp phép theo các điều khoản MIT: được phép dùng, sao chép, sửa đổi và phân phối, kèm theo thông báo bản quyền này.</p>`:`
+    <div class="crs"><h3>Tạo bởi Thuc Pham</h3><p>Ý tưởng, thiết kế, lập trình và đồ hoạ.</p></div>
+    <div class="crs"><h3>Âm nhạc</h3><p>Lofi tạo theo thủ tục bằng Web Audio</p></div>
+    <div class="crs"><h3>Cảm hứng</h3><p>Dinkum (James Bendon) và những tựa game nông trại ấm cúng</p></div>
+    <div class="crcols"><div class="crs"><h3>Công nghệ</h3><p>Three.js<br>Web Audio API<br>GitHub Pages</p></div>
+      <div class="crs"><h3>Cảm ơn đặc biệt</h3><p>Gia đình và bạn bè<br>Những người chơi thử<br>Mọi người ủng hộ tác giả<br>Và bạn, người đã ghé đảo</p></div></div>
+    <p class="crnote">Game được làm ở Việt Nam, với tình yêu dành cho những làng quê yên bình, những buổi chiều không vội và những người đang cần một chỗ để nghỉ ngơi. Mong bạn tìm được chút bình yên ở đây. 🍃</p>`}</div>`}
   else if(uiOpen==='donate'){h+=head('Ủng hộ tác giả','Nếu bạn thích Đảo Bình Yên, một ly cà phê sẽ giúp game có thêm nhiều mùa mới.')+`<div class="detail" style="display:block;text-align:center;line-height:1.6">
       <img src="donate-qr.jpg" alt="Mã VietQR ủng hộ Thuc Pham" style="width:min(270px,66vw);aspect-ratio:720/1110;object-fit:cover;border-radius:18px;box-shadow:0 6px 18px rgba(0,0,0,.22);display:block;margin:2px auto 10px">
       <div>Mở app ngân hàng bất kỳ, quét mã VietQR để ủng hộ <b>Thuc Pham</b>.</div><div class="req">Mỗi sự ủng hộ, dù nhỏ, đều là động lực rất lớn. Cảm ơn bạn! ♥</div>
@@ -1556,6 +1576,7 @@ panel.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b
   if(a==='stog'){SET[v]=b.dataset.b==='1';applySet();saveSet();renderPanel();return}if(a==='bind'){REBIND=v;renderPanel();return}
   if(a==='sreset'){SET=JSON.parse(JSON.stringify(SET_DEF));applySet();saveSet();renderPanel();return}
   if(a==='close')return closePanel();
+  if(a==='crlic'){CRLIC=!CRLIC;renderPanel();return}
   if(a==='stab')shopTab=v;if(a==='itab')invTab=v;if(a==='isel')invSel=v;if(a==='hbset'){const[sl,id]=v.split('|');hbAssign(+sl,id)}if(a==='hbclr')hbClear(+v);
   if(a==='buy'&&v.startsWith('a_')){const p=+b.dataset.p;if(G.coins>=p&&buyAnimal(v.slice(2))){G.coins-=p;SFX.coin();save()}renderPanel();return}
   if(a==='buy'){const n=+b.dataset.n,p=+b.dataset.p;if(roomFor(v)<n){toast('Túi đầy, không mua thêm được.');SFX.err()}else if(G.coins>=p*n){G.coins-=p*n;give(v,n);SFX.coin()}}
