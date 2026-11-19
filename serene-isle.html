@@ -161,7 +161,7 @@ body.intro #hud,body.intro #touch{display:none}
 .mb:active{transform:translateX(3px) scale(.98)}
 .mb.main{background:linear-gradient(90deg,#f0884e,#e8604a);border-color:rgba(255,220,180,.6);box-shadow:0 8px 22px rgba(232,96,74,.35)}.mb.main .mi{background:rgba(255,255,255,.22)}.mb.main small{color:rgba(255,245,235,.85)}
 .mb.main:hover{background:linear-gradient(90deg,#f59a5c,#ee6c54)}
-.mb.don .mi{color:#ff8a8a}
+.mb.don .mi{color:#ff8a8a}.mb.del{font-size:15px;padding:8px 16px;background:rgba(20,10,18,.25)}.mb.del .mi{width:30px;height:30px;font-size:14px}.mb.del:hover,.mb.del:focus-visible{background:rgba(120,30,30,.6);border-color:#ff8a7a}
 #title .tfoot{position:absolute;left:48px;right:24px;bottom:18px;display:flex;justify-content:space-between;gap:12px;font:600 12px var(--f-ui);color:rgba(255,236,210,.6)}
 body.menu #hud,body.menu #touch{display:none}
 @media (max-width:700px){#title .tglow{background:linear-gradient(0deg,rgba(28,14,24,.85) 0%,rgba(40,20,30,.5) 60%,rgba(40,20,30,.15))}#title .tcol{width:100%;padding:28px 20px 60px;justify-content:flex-end;align-items:center;text-align:center}#title .tbadge{align-self:center}.mbtns{max-width:none}#title .tfoot{left:16px;right:16px;font-size:11px}}
@@ -251,6 +251,7 @@ body.menu #hud,body.menu #touch{display:none}
       <button class="mb" id="bSet" type="button"><span class="mi">⚙</span><span class="mt">Cài đặt</span></button>
       <button class="mb" id="bCred" type="button"><span class="mi">✦</span><span class="mt">Ghi công</span></button>
       <button class="mb don" id="bDon" type="button"><span class="mi">♥</span><span class="mt">Ủng hộ tác giả</span></button>
+      <button class="mb del" id="bDel" type="button" hidden><span class="mi">🗑</span><span class="mt">Xoá đảo</span></button>
     </nav>
   </div>
   <div class="tfoot"><span>Thuc Pham · 2026</span><span>Phiên bản web · tự lưu trên trình duyệt</span></div>
@@ -1552,6 +1553,7 @@ function renderPanel(){let h='';panel.classList.toggle('credp',uiOpen==='credits
     <div class="crs"><h3>Âm nhạc</h3><p>Lofi tạo theo thủ tục bằng Web Audio</p></div>
     <div class="crs"><h3>Cảm ơn đặc biệt</h3><p>Gia đình và bạn bè<br>Những người chơi thử<br>Mọi người ủng hộ tác giả<br>Và bạn, người đã ghé đảo</p></div>
     <p class="crnote">Game được làm ở Việt Nam, với tình yêu dành cho những làng quê yên bình, những buổi chiều không vội và những người đang cần một chỗ để nghỉ ngơi. Mong bạn tìm được chút bình yên ở đây. 🍃</p>`}</div>`}
+  else if(uiOpen==='wipe'){h+=head('Xoá hòn đảo này?',`Toàn bộ tiến trình của <b>${NM()}</b> (ngày ${G.day}, ${G.coins} xu, nhà cửa, vật nuôi, bộ sưu tập) sẽ bị xoá khỏi trình duyệt. Không thể hoàn tác.`)+'<div class="detail" style="justify-content:flex-end"><button class="btn alt" data-a="close" type="button">Giữ lại</button><button class="btn" data-a="wipe" type="button" style="background:#c4442f;box-shadow:0 3px 0 #7a2418">Xoá vĩnh viễn</button></div>'}
   else if(uiOpen==='donate'){h+=head('Ủng hộ tác giả','Nếu bạn thích Đảo Bình Yên, một ly cà phê sẽ giúp game có thêm nhiều mùa mới.')+`<div class="detail" style="display:block;text-align:center;line-height:1.6">
       <img src="donate-qr.jpg" alt="Mã VietQR ủng hộ Thuc Pham" style="width:min(270px,66vw);aspect-ratio:720/1110;object-fit:cover;border-radius:18px;box-shadow:0 6px 18px rgba(0,0,0,.22);display:block;margin:2px auto 10px">
       <div>Mở app ngân hàng bất kỳ, quét mã VietQR để ủng hộ <b>Thuc Pham</b>.</div><div class="req">Mỗi sự ủng hộ, dù nhỏ, đều là động lực rất lớn. Cảm ơn bạn! ♥</div>
@@ -1575,6 +1577,7 @@ panel.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b
   if(a==='stog'){SET[v]=b.dataset.b==='1';applySet();saveSet();renderPanel();return}if(a==='bind'){REBIND=v;renderPanel();return}
   if(a==='sreset'){SET=JSON.parse(JSON.stringify(SET_DEF));applySet();saveSet();renderPanel();return}
   if(a==='close')return closePanel();
+  if(a==='wipe'){try{localStorage.removeItem(SAVE_KEY)}catch(e){}location.reload();return}
   if(a==='crlic'){CRLIC=!CRLIC;renderPanel();return}
   if(a==='stab')shopTab=v;if(a==='itab')invTab=v;if(a==='isel')invSel=v;if(a==='hbset'){const[sl,id]=v.split('|');hbAssign(+sl,id)}if(a==='hbclr')hbClear(+v);
   if(a==='buy'&&v.startsWith('a_')){const p=+b.dataset.p;if(G.coins>=p&&buyAnimal(v.slice(2))){G.coins-=p;SFX.coin();save()}renderPanel();return}
@@ -2186,7 +2189,7 @@ async function loadProg(p,t){$('#lFill').style.width=Math.round(p*100)+'%';$('#l
 async function start2(){
   $('#lTip').textContent=TIPS[Math.floor(Math.random()*TIPS.length)];const tipI=setInterval(()=>{$('#lTip').textContent=TIPS[Math.floor(Math.random()*TIPS.length)]},2600);
   const sv=loadSave();await loadProg(.02,'Đang tìm hòn đảo trên bản đồ…');await buildWorld(sv,loadProg);await loadProg(1,'Xong! Chào mừng tới đảo.');clearInterval(tipI);if(sv)rebuildPlayer();applySet();$('#gear').onclick=()=>{if(!uiOpen)openPanel('settings')};document.body.classList.add('menu');MENU.on=true;MENU.time=G.time;if(sv)$('#contInfo').textContent=`${NM()} · ${SEAS[season()].n} ${seasonDay()} · ngày ${G.day}`;
-  $('#bSet').onclick=()=>openPanel('settings');$('#bCred').onclick=()=>openPanel('credits');$('#bDon').onclick=()=>openPanel('donate');if(sv)$('#bContinue').hidden=false;
+  $('#bSet').onclick=()=>openPanel('settings');$('#bCred').onclick=()=>openPanel('credits');$('#bDon').onclick=()=>openPanel('donate');if(sv){$('#bContinue').hidden=false;$('#bDel').hidden=false}$('#bDel').onclick=()=>openPanel('wipe');
   camYaw=Math.PI*.15;renderHUD();applyDay();requestAnimationFrame(frame);$('#loading').hidden=true;
   $('#bContinue').onclick=()=>{menuOff();audioOn();$('#title').hidden=true;running=true;renderQuest();toast(`Chào mừng ${NM()} trở lại, ngày ${G.day}!`)};
   $('#bNew').onclick=()=>{try{localStorage.removeItem(SAVE_KEY)}catch(e){}if(sv){try{sessionStorage.setItem('rg-intro','1')}catch(e){}location.reload();return}showCreate()};
