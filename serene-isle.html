@@ -25,8 +25,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:#24180e;font-family:va
 #timeLbl{font-weight:800;font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
 #sunDot{width:22px;height:22px;border-radius:50%;background:#ffc93c;box-shadow:0 0 0 3px #fff3d6,0 0 0 5px var(--bark)}
 #stats{display:flex;flex-direction:column;gap:3px;margin-top:2px}.st{display:flex;align-items:center;gap:6px;font-size:12px;line-height:1}.st span{width:16px;text-align:center}
-#stats .bar{flex:1;height:10px;border-radius:6px;background:#e7d3a6;border:2px solid var(--bark);overflow:hidden}
-#stats .bar i{display:block;height:100%;width:100%;transition:width .3s}#hpBar{background:#d8452f}#calmBar{background:#5fb8a0}#wtBar{background:#3d9bd6}#enBar{background:#e8b02f}
+#stats .bar{position:relative;flex:1;height:10px;border-radius:6px;background:#e7d3a6;border:2px solid var(--bark);overflow:hidden}
+#stats .bar i{display:block;height:100%;width:100%;transition:width .3s}#hpBar{background:#d8452f}#calmBar{background:#5fb8a0}#wtBar{background:#3d9bd6}#enBar{background:#e8b02f}#enRec{position:absolute;top:0;bottom:0;left:0;width:0;background:repeating-linear-gradient(90deg,rgba(232,176,47,.45) 0 4px,rgba(232,176,47,.25) 4px 8px);transition:left .3s,width .3s}
 #coins{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:calc(176px + env(safe-area-inset-right,0px));padding:6px 14px;font-weight:800;font-size:20px;display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
 .coin{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe38a,#e0a21f 70%);border:2px solid #9a6510;display:inline-block}
 #mini{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:150px;height:150px;border-radius:16px;border:3px solid var(--bark);box-shadow:0 4px 0 rgba(58,39,21,.45);background:#1f6f86}
@@ -200,7 +200,7 @@ body.menu #hud,body.menu #touch{display:none}
   <div id="clock" class="chip">
     <div class="row"><span id="dayLbl">Ngày 1</span><span id="sunDot"></span></div>
     <div id="timeLbl">06:00</div>
-    <div id="stats"><div class="st"><span>❤</span><div class="bar"><i id="hpBar"></i></div></div><div class="st"><span>💧</span><div class="bar"><i id="wtBar"></i></div></div><div class="st"><span>⚡</span><div class="bar"><i id="enBar"></i></div></div><div class="st" title="Bình yên"><span>🍃</span><div class="bar"><i id="calmBar"></i></div></div></div>
+    <div id="stats"><div class="st"><span>❤</span><div class="bar"><i id="hpBar"></i></div></div><div class="st"><span>💧</span><div class="bar"><i id="wtBar"></i></div></div><div class="st"><span>⚡</span><div class="bar"><i id="enBar"></i><b id="enRec"></b></div></div><div class="st" title="Bình yên"><span>🍃</span><div class="bar"><i id="calmBar"></i></div></div></div>
   </div>
   <div id="quest" class="chip" hidden><b>Nhiệm vụ</b><div id="questT"></div><div id="questP"></div><div id="questTip"></div></div>
   <div id="coins" class="chip"><span class="coin"></span><b id="coinLbl">0</b></div>
@@ -1297,11 +1297,12 @@ function eatUpdate(){if(eatSp&&!(PL.swing>0&&(PL.act==='eat'||PL.act==='drink'))
 function consume(id){const it=ITEMS[id],e=it.eat||{};take(id);eatAnim(id);G.hp=Math.min(100,G.hp+(e.hp||0));G.drink=Math.min(100,G.drink+(e.wt||0));G.energy=Math.min(EMAX(),G.energy+(e.en||0));
   SFX.pop();toast(`${e.wt&&!e.en?'Uống':'Ăn'} ${it.n}: ${eatText(it)}`);hudDirty=true}
 let statWarn={};
-function statsUpdate(dt){if((G.weather==='rain'||G.weather==='storm')&&Math.random()<dt*.5){for(let t=0;t<40;t++){const i=Math.round(PL.x)+ri(-25,25),j=Math.round(PL.z)+ri(-25,25);if(inb(i,j)){const k=IDX(i,j);if(soil[k]===1&&!wet[k]){wet[k]=1;tileColor(k)}}}}const hrs=dt*2/60;G.drink=Math.max(0,G.drink-5*hrs);G.energy=Math.max(0,G.energy-EMAX()*.1*hrs*(PL.sprint&&PL.moving&&LIC('stam')<2?2:1)*(calmLv()>=2?.8:1)*(PL.sit?.3:1));
+function statsUpdate(dt){if((G.weather==='rain'||G.weather==='storm')&&Math.random()<dt*.5){for(let t=0;t<40;t++){const i=Math.round(PL.x)+ri(-25,25),j=Math.round(PL.z)+ri(-25,25);if(inb(i,j)){const k=IDX(i,j);if(soil[k]===1&&!wet[k]){wet[k]=1;tileColor(k)}}}}const hrs=dt*2/60;G.drink=Math.max(0,G.drink-5*hrs);{const base=EMAX()*.1*hrs*(calmLv()>=2?.8:1)*(PL.sit?.3:1),sp=PL.sprint&&PL.moving&&LIC('stam')<2?base:0;G.energy=Math.max(0,G.energy-base-sp);if(sp){ENR.rec+=sp*.8;ENR.t=0}ENR.t+=dt;if(ENR.t>1&&ENR.rec>0){const r=Math.min(ENR.rec,dt*EMAX()*.12*(PL.sit?2:1));ENR.rec-=r;G.energy=Math.min(EMAX(),G.energy+r);hudDirty=true}ENR.rec=Math.min(ENR.rec,EMAX()-G.energy)}
   let dh=-1;if(G.drink<=0)dh-=7;if(G.energy<=0)dh-=5;G.hp=Math.max(0,Math.min(100,G.hp+dh*hrs));
   for(const[k,v,m]of[['drink',G.drink,'Khát nước quá… Tìm ao suối hoặc uống dừa, chai nước.'],['energy',G.energy,'Đói và mệt rồi. Ăn gì đó đi.'],['hp',G.hp,'Máu thấp! Ăn uống ngay kẻo ngất.']]){if(v<20&&!statWarn[k]){statWarn[k]=1;toast(m);SFX.err()}if(v>30)statWarn[k]=0}
   if(G.hp<=0&&running)newDay('hp')}
-function useEnergy(n){if(G.energy<n){toolHold=false;toast('Quá mệt! Ăn gì đó hoặc đi ngủ.');SFX.err();return false}G.energy=Math.max(0,G.energy-n);hudDirty=true;return true}
+const ENR={rec:0,t:0};
+function useEnergy(n){if(G.energy<n){toolHold=false;toast('Quá mệt! Ăn gì đó hoặc đi ngủ.');SFX.err();return false}G.energy=Math.max(0,G.energy-n);ENR.rec+=n*.8;ENR.t=0;hudDirty=true;return true}
 
 /* ---------- targeting ---------- */
 function facing(){return[Math.sin(PL.rot),Math.cos(PL.rot)]}
@@ -1643,7 +1644,7 @@ function cycle(){const id=HOTBAR[G.tool].id;if(id==='seed'){G.seedSel=(G.seedSel
   else if(id==='build'){const own=PLACEABLES.filter(x=>has(x));if(!own.length){toast('Chưa có đồ để đặt. Chế tạo ở Bàn chế tạo.');return}G.buildSel=own[(own.indexOf(G.buildSel)+1)%own.length]}hudDirty=true}
 function renderHUD(){$('#dayLbl').textContent=`${SEAS[season()].i} ${SEAS[season()].n} ${seasonDay()} · ${(WEA[G.weather]||WEA.sun).i}`;$('#dayLbl').title=`Ngày ${G.day} · ${(WEA[G.weather]||WEA.sun).n}`;$('#coinLbl').textContent=G.coins.toLocaleString('vi-VN');
   statBars();renderHotbar()}
-function statBars(){$('#calmBar').style.width=(G.calm||0)+'%';$('#hpBar').style.width=G.hp+'%';$('#wtBar').style.width=G.drink+'%';$('#enBar').style.width=Math.min(100,G.energy/EMAX()*100)+'%';
+function statBars(){$('#calmBar').style.width=(G.calm||0)+'%';$('#hpBar').style.width=G.hp+'%';$('#wtBar').style.width=G.drink+'%';{const e=Math.min(100,G.energy/EMAX()*100);$('#enBar').style.width=e+'%';const re=$('#enRec');re.style.left=e+'%';re.style.width=Math.min(100-e,ENR.rec/EMAX()*100)+'%'}
   for(const[id,v]of[['hpBar',G.hp],['wtBar',G.drink],['enBar',G.energy/EMAX()*100]])$('#'+id).style.opacity=v<20?(.5+.5*Math.abs(Math.sin(performance.now()/250))):1}
 
 /* minimap */
