@@ -114,7 +114,7 @@ body.intro #hud,body.intro #touch{display:none}
 #reelFish{position:absolute;left:50%;transform:translate(-50%,50%);font-size:28px;line-height:1;filter:drop-shadow(0 2px 0 rgba(0,0,0,.3))}
 .rprog{position:relative;width:14px;height:min(320px,46vh);border-radius:7px;background:#5a3a22;border:3px solid #6b4423;overflow:hidden;display:flex;align-items:flex-end}.rprog i{display:block;width:100%}
 .rhint{margin-top:8px;font-size:12px;font-weight:700;text-align:center;line-height:1.3}
-#title{z-index:10}#panelWrap{z-index:30}#intro{z-index:20}#dlg{z-index:25}#fade{z-index:40}
+#title{z-index:10}#create{z-index:11}#panelWrap{z-index:30}#intro{z-index:20}#dlg{z-index:25}#fade{z-index:40}
 #gear{position:absolute;top:calc(176px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:46px;height:46px;font-size:22px;line-height:1;cursor:pointer;pointer-events:auto;color:#4a2f1c;font-family:var(--f-ui);padding:0;display:flex;align-items:center;justify-content:center;border:3px solid var(--bark)}#gear svg{display:block}#gear:hover{background:#fff3d6}
 @media (max-width:700px){#gear{top:calc(114px + env(safe-area-inset-top,0px))}}
 .srow{display:grid;grid-template-columns:150px 1fr 52px;gap:12px;align-items:center;padding:8px 4px;border-bottom:2px dashed #ead6a8}
@@ -133,6 +133,13 @@ body.intro #hud,body.intro #touch{display:none}
 #title ul{margin:0 0 16px;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:14px;font-weight:600}
 #title .go{display:flex;gap:10px;flex-wrap:wrap}
 #title .btn{font-size:18px;padding:8px 22px}
+#create{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(40,22,8,.55);padding:16px;box-sizing:border-box}#create[hidden]{display:none}
+#create .card{background:var(--paper);border:4px solid var(--bark);border-radius:24px;padding:22px 26px;max-width:600px;width:100%;box-shadow:0 10px 0 rgba(58,39,21,.5);box-sizing:border-box}
+#create h2{margin:0;font-size:34px;font-weight:800;color:var(--red)}#create .tag{margin:4px 0 12px;font-weight:600;color:var(--ink-2)}
+.cwrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:14px}#cPrev{width:240px;height:240px;border-radius:18px;background:linear-gradient(#bfe3f0,#f3e2b8);border:3px solid var(--bark)}
+.cside{flex:1;min-width:200px;display:flex;flex-direction:column;gap:8px}.seg2{display:flex;gap:8px}.gbtn{flex:1;font:800 18px var(--f-ui);padding:10px;border-radius:14px;border:3px solid var(--bark);background:var(--paper-2);color:var(--ink);cursor:pointer}
+.gbtn.on{background:#e8913a;color:#fff}.nlab{font-weight:800;color:var(--ink-2);margin-top:6px}#cName{font:700 18px var(--f-ui);padding:10px 12px;border-radius:12px;border:3px solid var(--bark);background:#fffaf0;color:var(--ink);outline:none}
+#cName:focus{border-color:#e8913a}.err{margin:0;color:#c0392b;font-weight:700;font-size:14px}#create .go{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}#create .btn{font-size:18px;padding:8px 22px}
 #touch{position:fixed;inset:0;pointer-events:none}
 #joy{position:absolute;left:calc(20px + env(safe-area-inset-left,0px));bottom:calc(110px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;background:rgba(255,243,214,.35);border:3px solid rgba(107,68,35,.6);pointer-events:auto;touch-action:none}
 #joy i{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:var(--paper);border:3px solid var(--bark)}
@@ -184,6 +191,17 @@ body.intro #hud,body.intro #touch{display:none}
 <div id="power" hidden><span>Lực quăng</span><div class="pwbar"><i id="powerFill"></i></div></div>
 <div id="reel" hidden><div class="rtop"><b>Cá cắn câu!</b><span id="reelRar"></span><span id="reelStars"></span></div><div class="rbody"><div class="rtrack"><div id="reelZone"></div><div id="reelFish">🐟</div></div><div class="rprog"><i id="reelProg"></i></div></div><div class="rhint">Giữ chuột trái hoặc Space để nâng khung xanh, giữ con cá nằm trong khung</div></div>
 <div id="fade"></div>
+<div id="create" hidden>
+  <div class="card">
+    <h2>Bạn là ai?</h2>
+    <p class="tag">Chọn nhân vật và đặt tên trước khi lên đường ra đảo.</p>
+    <div class="cwrap"><canvas id="cPrev" width="300" height="300" aria-label="Xem trước nhân vật"></canvas>
+      <div class="cside"><div class="seg2"><button class="gbtn on" data-g="m" type="button">👦 Nam</button><button class="gbtn" data-g="f" type="button">👧 Nữ</button></div>
+        <label class="nlab" for="cName">Tên nhân vật</label><input id="cName" maxlength="16" autocomplete="off" spellcheck="false" placeholder="Nhập tên…">
+        <p class="err" id="cErr" hidden>Hãy nhập tên (1–16 ký tự).</p></div></div>
+    <div class="go"><button class="btn" id="cBack" type="button" style="background:#8a7a5a;box-shadow:0 3px 0 #5a4a3a">Quay lại</button><button class="btn alt" id="cGo" type="button">Lên đường ▸</button></div>
+  </div>
+</div>
 <div id="title">
   <div class="card">
     <h1>Redgum<br>Island</h1>
@@ -309,7 +327,7 @@ const H=new Int8Array(N*N), BIO=new Uint8Array(N*N), DIRT=new Uint8Array(N*N); /
 const solid=new Uint8Array(N*N), soil=new Uint8Array(N*N), wet=new Uint8Array(N*N);
 const objAt=new Array(N*N).fill(null), bldAt=new Array(N*N).fill(null), placedAt=new Array(N*N).fill(null), cropAt=new Array(N*N).fill(null);
 const baseCol=[];
-const G={bpos:{},hp:100,drink:100,tut:0,owned:{},flags:{},day:1,time:840,coins:30,energy:100,inv:{},lv:{axe:1,pick:1,can:1,rod:1,net:1},water:20,built:{},caught:{},quest:null,seedSel:0,buildSel:null,tool:0,hb:HB_DEF(),bag:0};syncHB();
+const G={bpos:{},hp:100,drink:100,tut:0,owned:{},flags:{},day:1,time:840,coins:30,energy:100,inv:{},lv:{axe:1,pick:1,can:1,rod:1,net:1},water:20,built:{},caught:{},quest:null,seedSel:0,buildSel:null,tool:0,hb:HB_DEF(),bag:0,look:{g:'m',name:'Bạn'}};syncHB();
 let running=false, uiOpen=null, paused=false;
 /* cai dat nguoi choi (luu localStorage) */
 const SET_DEF={vol:80,music:70,sfx:85,quality:'high',shadows:true,grass:true,fov:42,view:150,help:true,sens:50,invY:false,
@@ -704,13 +722,18 @@ function makeHuman(o){
     decal(S(12,10),s*.1,.01,.036,.05,.02,'#2a1a12','eyes');
     decal(S(8,6),s*.1+.012,.032,.011,.014,.006,'#ffffff','eyes',0,.009);
     decal(S(10,6),s*.1,.088,.05,.012,.012,o.brow||hair,'head',-s*.12);
-    decal(S(10,6),s*.172,-.07,.046,.026,.006,blush,'head')}
+    decal(S(10,6),s*.172,-.07,.046,.026,.006,blush,'head');
+    if(o.fem){decal(S(8,6),s*.136,.04,.018,.008,.008,'#2a1a12','eyes',-s*.7,.004);decal(S(8,6),s*.128,.052,.014,.006,.008,'#2a1a12','eyes',-s*1.0,.004)}}
   decal(S(10,8),0,-.035,.03,.026,.03,skinD,'head');
   if(o.beard){decal(S(14,10),0,-.17,.17,.12,.12,o.beard,'head');decal(S(10,8),-.045,-.075,.05,.02,.03,o.beard,'head',.2);decal(S(10,8),.045,-.075,.05,.02,.03,o.beard,'head',-.2)}
   {const{p,n}=onHead(0,-.098);const q=new THREE.Quaternion().setFromUnitVectors(Z,n).multiply(new THREE.Quaternion().setFromAxisAngle(Z,Math.PI));
     add(new THREE.TorusGeometry(.04,.009,6,14,Math.PI),new THREE.Matrix4().compose(p.addScaledVector(n,-.002),q,new V3(1,1,.4)),'#8a3a2e','head')}
   add(new THREE.SphereGeometry(1,24,12,0,Math.PI*2,0,Math.PI*.56),Mx(0,H0+.02,-.015,-.32,0,0,.31,.3,.3),hair,'head');
   add(S(16,12),Mx(0,H0-.02,-.12,0,0,0,.29,.25,.2),hair,'head');
+  if(o.fem){add(S(16,12),Mx(0,H0-.1,-.12,.18,0,0,.305,.29,.2),hair,'head');for(const s of[-1,1])add(S(12,10),Mx(s*.255,H0-.1,.05,0,0,s*.12,.07,.19,.1),hair,'head');
+    add(S(12,10),Mx(0,H0-.06,-.27,0,0,0,.07,.06,.06),o.tie||'#d8566a','head');
+    for(let k=0;k<4;k++)add(S(12,10),Mx(0,H0-.13-k*.075,-.3-k*.012,.2,0,0,.085-k*.012,.075,.075-k*.01),hair,'head');
+    add(S(10,8),Mx(0,H0+.16,.17,.5,0,0,.2,.06,.1),hair,'head')}
   if(o.hair&&!o.hat){add(S(10,8),Mx(-.12,H0+.2,.17,.4,0,.3,.11,.06,.08),hair,'head');add(S(10,8),Mx(.05,H0+.22,.18,.5,0,-.2,.1,.06,.08),hair,'head')}
   if(o.hat){const hm=Mx(0,H0+.18,0,-.06,0,0,1.7);const L=(pts,seg)=>new THREE.LatheGeometry(pts.map(([x,y])=>new THREE.Vector2(Math.max(1e-4,x),y)),seg);
     add(L([[.137,-.005],[.13,.06],[.112,.11],[.07,.132],[0,.135]],20),hm,o.hat,'head');
@@ -799,7 +822,14 @@ function toolMesh(id){const g=new THREE.Group(),b=(w,h,d,c,x,y,z,rx=0)=>{const m
   else if(id==='seed'){b(.16,.18,.13,'#d8b27a',0,-.08,.02);tilt=0}
   else if(id==='build'){b(.04,.04,.36,wood,0,0,.13);b(.06,.18,.08,'#7d8890',0,-.02,.3)}
   g.rotation.x=tilt;g.scale.setScalar(.85);return g}
-const player=makeHuman({shirt:'#3f7fb0',pants:'#6b4a2e',skin:'#f0c098',hat:'#9a6534'});scene.add(player.g);
+const LOOKS={m:{shirt:'#3f7fb0',pants:'#6b4a2e',skin:'#f0c098',hat:'#9a6534',hair:'#6a4326'},f:{shirt:'#e07a8a',pants:'#4a5a8a',skin:'#f3c6a0',hat:'#e8d29a',band:'#d8566a',hair:'#5a3420',fem:true}};
+const HERO={m:{skin:'#f0c098',shirt:'#e6eaf0',pants:'#2a2f3a',hair:'#2a1a10',shoe:'#1a1a1a'},f:{skin:'#f3c6a0',shirt:'#e6eaf0',pants:'#2a2f3a',hair:'#2a1a10',shoe:'#1a1a1a',fem:true}};
+const lookOpts=g=>{const o={...LOOKS[g]};if(o.fem===undefined)delete o.fem;return o};
+let player=makeHuman(lookOpts('m'));scene.add(player.g);
+function rebuildPlayer(){const g=(G.look&&G.look.g)||'m',old=player;scene.remove(old.g);player=makeHuman(lookOpts(g));scene.add(player.g);
+  player.g.position.copy(old.g.position);player.g.rotation.copy(old.g.rotation);player.g.visible=old.g.visible;if(typeof toolObj!=='undefined'&&toolObj){toolObj=null;refreshToolMesh()}
+  if(IN.hero){if(IN.hero.g.parent)IN.hero.g.parent.remove(IN.hero.g);IN.hero=null}}
+const NM=()=>(G.look&&G.look.name)||'Bạn',PRN=()=>(G.look&&G.look.g==='f')?'cô':'cậu';
 const PL={x:CX,z:CZ+2,y:1,vy:0,ground:true,act:'axe',swingDur:.4,prep:0,land:0,landAmt:0,rot:Math.PI,swing:0,walk:0,moving:false,speed:0};
 let toolObj=null;function refreshToolMesh(){if(toolObj)player.hand.remove(toolObj);const id=HOTBAR[G.tool].id;toolObj=TOOLS[id]&&G.owned[id]?toolMesh(id):new THREE.Group();player.hand.add(toolObj)}
 
@@ -1271,7 +1301,7 @@ function renderPanel(){let h='';if(uiOpen==='settings'){panel.innerHTML=settings
     h+=`<div class="detail" style="margin:0 0 12px"><div><b>Yêu cầu hôm nay</b><div class="req">${q.done?'Đã hoàn thành. Quay lại ngày mai.':`Ông Bảy cần ${q.q} ${ITEMS[q.id].i} ${ITEMS[q.id].n} (đang có ${G.inv[q.id]||0}) · thưởng ${q.reward} xu`}</div></div>${q.done?'':`<button class="btn alt" data-a="quest" type="button" ${has(q.id,q.q)?'':'disabled'}>Giao hàng</button>`}</div>`;
     h+='<div class="rows">'+PROJECTS.map(p=>`<div class="row"><div class="ic">${G.built[p.id]?'✅':'🏗️'}</div><div class="nm">${p.n}<small>${p.d}</small>${G.built[p.id]?'':`<small class="req">${reqHTML(p.cost)}</small>`}</div><div class="acts">${G.built[p.id]?'<b>Đã xây</b>':`<button class="btn" data-a="proj" data-v="${p.id}" type="button" ${canPay(p.cost)?'':'disabled'}>Xây</button>`}</div></div>`).join('')+'</div>'}
   else if(uiOpen==='sleep'){h+=head('Đi ngủ?',`Bây giờ là ${clock()}. Ngủ để sang ngày ${G.day+1} (thức dậy lúc 7 giờ): cây được tưới sẽ lớn, sức hồi đầy, trò chơi tự lưu. Nhớ: 23 giờ phải có mặt ở lều.`)+'<div class="detail" style="justify-content:flex-end"><button class="btn" data-a="close" type="button" style="background:#9a8a6a;box-shadow:0 3px 0 #6a5a3a">Chưa</button><button class="btn alt" data-a="sleep" type="button">Ngủ đến sáng</button></div>'}
-  else if(uiOpen==='inv'){h+=head('Túi đồ',`${G.coins} xu · sức ${Math.round(G.energy)}`)+`<div class="tabs"><button class="tab ${invTab==='items'?'on':''}" data-a="itab" data-v="items" type="button">Đồ đạc</button><button class="tab ${invTab==='book'?'on':''}" data-a="itab" data-v="book" type="button">Sổ sưu tầm</button></div>`;
+  else if(uiOpen==='inv'){h+=head('Túi đồ',`${NM()} · ${G.coins} xu · sức ${Math.round(G.energy)}`)+`<div class="tabs"><button class="tab ${invTab==='items'?'on':''}" data-a="itab" data-v="items" type="button">Đồ đạc</button><button class="tab ${invTab==='book'?'on':''}" data-a="itab" data-v="book" type="button">Sổ sưu tầm</button></div>`;
     if(invTab==='items'){const ids=Object.keys(G.inv).filter(id=>G.inv[id]>0),tl=Object.keys(TOOLS).filter(id=>G.owned[id]);
       h+=`<p class="sub">Chọn món rồi bấm số ô bên dưới, hoặc kéo thả thẳng xuống thanh nhanh. Chuột phải lên ô để bỏ trống.</p>`;
       if(tl.length)h+=`<div class="grid">${tl.map(id=>`<button class="cell ${invSel===id?'sel':''}" data-a="isel" data-v="${id}" draggable="false" data-drag="${id}" type="button"><span class="ic ict">${ICON[id]}</span>${TOOLS[id]}<br>${G.hb.includes(id)?'ô '+((G.hb.indexOf(id)+1)%10):'chưa gán'}</button>`).join('')}</div>`;
@@ -1438,7 +1468,7 @@ function confirmMove(){const M=MOVE;if(!M)return;if(!M.ok){toast('Không đặt 
 /* ---------- save/load ---------- */
 function serialize(){const objs=[],tiles=[],pl=[];for(let k=0;k<N*N;k++){const o=objAt[k];if(o)objs.push([k,o.type,o.berries,+o.rot.toFixed(2),+o.sc.toFixed(2)]);
   if(soil[k]===1||cropAt[k])tiles.push([k,soil[k],wet[k],cropAt[k]?cropAt[k].type:0,cropAt[k]?cropAt[k].g:0]);if(placedAt[k])pl.push([k,placedAt[k].type,placedAt[k].rot])}
-  return{v:4,tut:G.tut,owned:G.owned,flags:G.flags,bpos:G.bpos,seed:SEED,day:G.day,time:G.time,coins:G.coins,energy:G.energy,hp:G.hp,drink:G.drink,inv:G.inv,lv:G.lv,water:G.water,built:G.built,caught:G.caught,quest:G.quest,seedSel:G.seedSel,buildSel:G.buildSel,hb:G.hb,tool:G.tool,bag:G.bag,px:PL.x,pz:PL.z,objs,tiles,pl}}
+  return{v:4,tut:G.tut,owned:G.owned,flags:G.flags,bpos:G.bpos,seed:SEED,day:G.day,time:G.time,coins:G.coins,energy:G.energy,hp:G.hp,drink:G.drink,inv:G.inv,lv:G.lv,water:G.water,built:G.built,caught:G.caught,quest:G.quest,seedSel:G.seedSel,buildSel:G.buildSel,hb:G.hb,tool:G.tool,bag:G.bag,look:G.look,px:PL.x,pz:PL.z,objs,tiles,pl}}
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(serialize()))}catch(e){}}
 function loadSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));return s&&s.v===4?s:null}catch(e){return null}}
 window.claude?.hot?.snapshot?.(()=>serialize());
@@ -1452,7 +1482,7 @@ function buildWorld(sv){
   buildPier();addBuilding('shack',3,11,'shack');
   oldman=addNPC('bay','Ông Bảy',{shirt:'#8a9a7a',pants:'#5a4a3a',skin:'#d9a57a',hat:'#d8c27a',band:'#7a5a3a',hairCol:'#e8e4dc',brow:'#efece6',beard:'#efece6'},0,0,false);{const q=townPt(.5,10.2);oldman.x=oldman.hx=oldman.tx=q.x;oldman.z=oldman.hz=oldman.tz=q.z}oldman.old=true;
   const center=townIdx(0,3);if(!(sv&&sv.pl.some(p=>p[0]===center)))addPlaced('campfire',center);
-  if(sv){Object.assign(G,{tut:sv.tut||0,owned:sv.owned||{},flags:sv.flags||{},bpos:sv.bpos||{},day:sv.day,time:sv.time,coins:sv.coins,energy:sv.energy,hp:sv.hp??100,drink:sv.drink??100,inv:sv.inv,lv:sv.lv,water:sv.water,caught:sv.caught,quest:sv.quest,seedSel:sv.seedSel,buildSel:sv.buildSel,hb:(sv.hb&&sv.hb.length===HB_N)?sv.hb:HB_DEF(),tool:sv.tool||0,bag:sv.bag||0});syncHB();
+  if(sv){Object.assign(G,{tut:sv.tut||0,owned:sv.owned||{},flags:sv.flags||{},bpos:sv.bpos||{},day:sv.day,time:sv.time,coins:sv.coins,energy:sv.energy,hp:sv.hp??100,drink:sv.drink??100,inv:sv.inv,lv:sv.lv,water:sv.water,caught:sv.caught,quest:sv.quest,seedSel:sv.seedSel,buildSel:sv.buildSel,hb:(sv.hb&&sv.hb.length===HB_N)?sv.hb:HB_DEF(),tool:sv.tool||0,bag:sv.bag||0,look:sv.look||{g:'m',name:'Bạn'}});syncHB();
     for(const p of PROJECTS)if(sv.built[p.id])buildProject(p,false);
     for(const[k,s,w,ct,g]of sv.tiles){soil[k]=s;wet[k]=w;hideTuft(k);if(ct)plantCrop(k,ct,g);tileColor(k)}
     for(const[k,t,r]of sv.pl)addPlaced(t,k,r);PL.x=sv.px;PL.z=sv.pz}
@@ -1593,9 +1623,9 @@ function buildBoard(){if(!bld('board'))placeB('board',4,0,'board');G.flags.board
 const TUT=[
   {t:'Đi tới căn lán ở đầu cầu tàu',target:()=>oldman,tip:'Đi theo mũi tên vàng. WASD để đi, Shift để chạy.',check:()=>distTo(oldman)<4.5,done:()=>dialog(BAY,[
     'Ồ… lâu lắm rồi mới có tàu ghé bến này. Cháu là ai thế?',
-    {who:'Bạn',t:'Dạ, cháu ở thành phố ra. Cháu muốn ở lại đảo một thời gian.'},
+    {who:NM(),t:`Dạ, cháu tên ${NM()}, ở thành phố ra. Cháu muốn ở lại đảo một thời gian.`},
     'Ở lại à? Đảo này chẳng có điện, chẳng có chợ, chỉ có ông già này với lũ chim biển thôi đấy.',
-    {who:'Bạn',t:'Cháu biết ạ. Ở thành phố cháu mệt quá rồi. Cháu chỉ muốn sống chậm lại một chút.'},
+    {who:NM(),t:'Cháu biết ạ. Ở thành phố cháu mệt quá rồi. Cháu chỉ muốn sống chậm lại một chút.'},
     'Hừm… Hồi trẻ ông cũng bỏ phố ra đây vì đúng cái lý do đó. Ông tên Bảy, cứ gọi ông Bảy.',
     {t:'Mấy món đồ cũ này ông không dùng tới nữa: cái rìu, cái xẻng với cái cuốc. Cháu cầm lấy mà dùng.',fx:()=>{own('axe','shovel','hoe');G.tool=HB('axe');refreshToolMesh();toast('Nhận được: Rìu, Xẻng, Cuốc đất');SFX.catch()}},
     {t:'Cầm thêm hai chai nước. Trên đảo nắng lắm, nhớ uống đủ nước, ăn đủ no, kẻo kiệt sức đấy.',fx:()=>{give('bottle',2,true);give('berry',3,true);toast('Nhận được: 2 Chai nước, 3 Quả mọng')}},
@@ -1641,7 +1671,7 @@ function arriveStart(){G.flags.arrived=1;const a=arrival,i=a.land%N,j=(a.land/N)
   PL.x=i;PL.z=j;PL.y=gH(i,j);PL.rot=Math.atan2(CX-i,CZ-j);camYaw=PL.rot+Math.PI;camPitch=.42;camDist=9;
   boat=mesh(boatGeo());boat.userData.dir=new V3(wi-i,0,wj-j).normalize();boat.position.set(wi+boat.userData.dir.x*1.8,SEA-.12,wj+boat.userData.dir.z*1.8);boat.rotation.y=Math.atan2(wi-i,wj-j);scene.add(boat);
   running=true;$('#title').hidden=true;hudDirty=true;
-  setTimeout(()=>dialog('Thuyền trưởng',['Tới nơi rồi đấy, chàng trai.','Căn lán ngay đầu cầu tàu là nhà ông Bảy, người duy nhất sống trên đảo này.','Mấy tháng nữa mới có chuyến tàu tiếp theo. Chúc cậu may mắn!'],
+  setTimeout(()=>dialog('Thuyền trưởng',[`Tới nơi rồi đấy, ${G.look.g==='f'?'cô gái':'chàng trai'}.`,'Căn lán ngay đầu cầu tàu là nhà ông Bảy, người duy nhất sống trên đảo này.',`Mấy tháng nữa mới có chuyến tàu tiếp theo. Chúc ${G.look.g==='f'?'cô':'cậu'} may mắn, ${NM()}!`],
     {done:()=>{boat.userData.leave=true;renderQuest();toast('Bấm vào màn hình rồi rê chuột để xoay camera. Esc để nhả chuột.');save()}}),900)}
 function boatUpdate(dt,T){if(!boat)return;boat.position.y=SEA-.12+Math.sin(T*1.5)*.05;boat.rotation.z=Math.sin(T*1.1)*.03;
   if(boat.userData.leave){boat.position.addScaledVector(boat.userData.dir,dt*2.6);boat.userData.lt=(boat.userData.lt||0)+dt;if(boat.userData.lt>20){scene.remove(boat);boat=null}}}
@@ -1650,7 +1680,7 @@ function boatUpdate(dt,T){if(!boat)return;boat.position.y=SEA-.12+Math.sin(T*1.5
 const IN={on:false,i:0,shown:0,t:0,cs:null,world:null,hero:null,cache:{}};
 const canvasTex=(w,h,draw)=>{const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t};
 const lam=c=>new THREE.MeshLambertMaterial({color:c}),pho=(c,sh=30)=>new THREE.MeshPhongMaterial({color:c,shininess:sh}),bas=c=>new THREE.MeshBasicMaterial({color:c});
-function heroMake(){if(!IN.hero)IN.hero=makeHuman({skin:'#f0c098',shirt:'#e6eaf0',pants:'#2a2f3a',hair:'#2a1a10',shoe:'#1a1a1a'});return IN.hero}
+function heroMake(){if(!IN.hero)IN.hero=makeHuman(HERO[(G.look&&G.look.g)||'m']);return IN.hero}
 function sitPose(h,dt,T,extra){poseHuman(h,dt,{amp:0,T});h.hips.position.y=h.hipBase;h.lL.th.rotation.x=h.lR.th.rotation.x=-1.5;h.lL.kn.rotation.x=h.lR.kn.rotation.x=1.5;
   h.lL.ft.rotation.x=h.lR.ft.rotation.x=0;extra&&extra(h,T)}
 function sceneCity(){const S=new THREE.Scene();S.background=new THREE.Color('#2c3442');S.fog=new THREE.FogExp2('#3a4454',.03);
@@ -1757,7 +1787,7 @@ function introSlide(i){if(IN.cs&&IN.cs.leave)IN.cs.leave();IN.i=i;IN.t=0;IN.show
     if(s.world==='boat'){if(!arrival)arrival=findArrival();G.time=6.6*60;scene.fog.near=FOG0.near;scene.fog.far=FOG0.far+40;player.g.visible=false;const a=arrival,i0=a.land%N,j0=(a.land/N)|0,wi=a.water%N,wj=(a.water/N)|0;
       const dir=new V3(wi-i0,0,wj-j0).normalize();introBoat=mesh(boatGeo());introBoat.userData={dir,start:new V3(wi+dir.x*55,SEA-.12,wj+dir.z*55)};introBoat.rotation.y=Math.atan2(-dir.x,-dir.z);scene.add(introBoat);
       const h=heroMake();scene.add(h.g)}}}
-function introStart(){document.body.classList.add('intro');IN.on=true;$('#intro').hidden=false;introSlide(0)}
+function introStart(){const pr=PRN();for(const sl of SLIDES){sl.t0=sl.t0||sl.t;sl.t=sl.t0.replace(/cậu/g,pr).replace(/Cậu/g,pr[0].toUpperCase()+pr.slice(1))}document.body.classList.add('intro');IN.on=true;$('#intro').hidden=false;introSlide(0)}
 function introUpdate(dt){IN.t+=dt;const s=SLIDES[IN.i];$('#introBlack').style.opacity=Math.max(0,1-IN.t/1.1);
   if(IN.t>.6&&IN.shown<s.t.length){IN.shown=Math.min(s.t.length,IN.shown+dt*42);$('#introText').textContent=s.t.slice(0,IN.shown|0)}
   $('#introHint').style.opacity=IN.shown>=s.t.length?1:0;
@@ -1775,12 +1805,27 @@ $('#intro').addEventListener('click',e=>{if(e.target.id==='introSkip')return;int
 $('#introSkip').addEventListener('click',e=>{e.stopPropagation();introEnd()});
 
 /* ---------- boot ---------- */
+/* man tao nhan vat: xem truoc 3D xoay cham */
+const CR={g:'m',r:null,sc:null,cam:null,h:{},raf:0};
+const DEF_NAME={m:'Minh',f:'Lan'};
+function crDraw(t){if($('#create').hidden)return;CR.raf=requestAnimationFrame(crDraw);const h=CR.h[CR.g];for(const k in CR.h)CR.h[k].g.visible=k===CR.g;h.g.rotation.y=.5+Math.sin(t/1400)*.6;poseHuman(h,.016,{p:t/1000*.8,amp:0});CR.r.render(CR.sc,CR.cam)}
+function crSet(g){const prevDef=Object.values(DEF_NAME).includes($('#cName').value)||!$('#cName').value;CR.g=g;document.querySelectorAll('.gbtn').forEach(b=>b.classList.toggle('on',b.dataset.g===g));if(prevDef)$('#cName').value=DEF_NAME[g];if(CR.r)crDraw(performance.now())}
+function showCreate(){$('#title').hidden=true;$('#create').hidden=false;
+  if(!CR.r){CR.r=new THREE.WebGLRenderer({canvas:$('#cPrev'),antialias:true,alpha:true});CR.r.setPixelRatio(Math.min(2,devicePixelRatio||1));CR.r.setSize(300,300,false);CR.sc=new THREE.Scene();
+    CR.sc.add(new THREE.HemisphereLight(0xffffff,0x886644,.85));const d=new THREE.DirectionalLight(0xffffff,.6);d.position.set(2,3,3);CR.sc.add(d);
+    CR.cam=new THREE.PerspectiveCamera(30,1,.1,20);CR.cam.position.set(0,.85,3.1);CR.cam.lookAt(0,.62,0);for(const g of['m','f']){CR.h[g]=makeHuman(lookOpts(g));CR.sc.add(CR.h[g].g)}}
+  crSet(CR.g);$('#cName').value=DEF_NAME[CR.g];cancelAnimationFrame(CR.raf);crDraw(performance.now());setTimeout(()=>{$('#cName').focus();$('#cName').select()},50)}
+function createDone(){const n=$('#cName').value.trim().replace(/[<>&"]/g,'');if(!n){$('#cErr').hidden=false;$('#cName').focus();return}$('#cErr').hidden=true;
+  G.look={g:CR.g,name:n};rebuildPlayer();cancelAnimationFrame(CR.raf);$('#create').hidden=true;audioOn();introStart()}
+document.querySelectorAll('.gbtn').forEach(b=>b.addEventListener('click',()=>crSet(b.dataset.g)));
+$('#cGo').addEventListener('click',createDone);$('#cBack').addEventListener('click',()=>{cancelAnimationFrame(CR.raf);$('#create').hidden=true;$('#title').hidden=false});
+$('#cName').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')createDone()});
 function start(){
-  const sv=loadSave();buildWorld(sv);applySet();$('#gear').onclick=()=>{if(!uiOpen)openPanel('settings')};$('#bSet').onclick=()=>openPanel('settings');if(sv)$('#bContinue').hidden=false;
+  const sv=loadSave();buildWorld(sv);if(sv)rebuildPlayer();applySet();$('#gear').onclick=()=>{if(!uiOpen)openPanel('settings')};$('#bSet').onclick=()=>openPanel('settings');if(sv)$('#bContinue').hidden=false;
   camYaw=Math.PI*.15;renderHUD();applyDay();requestAnimationFrame(frame);
-  $('#bContinue').onclick=()=>{audioOn();$('#title').hidden=true;running=true;renderQuest();toast(`Chào mừng trở lại, ngày ${G.day}!`)};
-  $('#bNew').onclick=()=>{try{localStorage.removeItem(SAVE_KEY)}catch(e){}if(sv){try{sessionStorage.setItem('rg-intro','1')}catch(e){}location.reload();return}audioOn();$('#title').hidden=true;introStart()};
-  let auto=false;try{auto=sessionStorage.getItem('rg-intro')==='1';sessionStorage.removeItem('rg-intro')}catch(e){}if(auto&&!sv){$('#title').hidden=true;introStart()}
+  $('#bContinue').onclick=()=>{audioOn();$('#title').hidden=true;running=true;renderQuest();toast(`Chào mừng ${NM()} trở lại, ngày ${G.day}!`)};
+  $('#bNew').onclick=()=>{try{localStorage.removeItem(SAVE_KEY)}catch(e){}if(sv){try{sessionStorage.setItem('rg-intro','1')}catch(e){}location.reload();return}showCreate()};
+  let auto=false;try{auto=sessionStorage.getItem('rg-intro')==='1';sessionStorage.removeItem('rg-intro')}catch(e){}if(auto&&!sv){showCreate()}
   setInterval(()=>{if(running)save()},45000);addEventListener('beforeunload',()=>{if(running)save()});
 }
 window.claude?.hot?.ready?window.claude.hot.ready(()=>start()):start();

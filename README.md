@@ -13,6 +13,8 @@ You leave a stressful city job and move to a nearly deserted island. Old Bảy, 
 - 3D story intro, tutorial quests, and procedural lofi music
 - Settings for volume, graphics and keybinds
 
+- Character creation: pick male or female and name your character
+
 ## Run
 Open `redgum-island.html` in a browser, or serve the folder:
 
