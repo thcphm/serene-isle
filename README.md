@@ -23,15 +23,15 @@ You leave a stressful city job and move to a nearly deserted island. Old Bảy, 
 See ROADMAP.md for what comes next.
 
 ## Run
-Open `redgum-island.html` in a browser, or serve the folder:
+Open `serene-isle.html` in a browser, or serve the folder:
 
 ```
 python -m http.server 8765
 ```
 
-Then go to http://localhost:8765/redgum-island.html
+Then go to http://localhost:8765/serene-isle.html
 
-Play online: https://thcphm.github.io/redgum-island/
+Play online: https://thcphm.github.io/serene-isle/
 
 ## Controls (default)
 - WASD: move · Space: jump · Shift: run · Mouse drag: orbit camera
