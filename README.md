@@ -34,7 +34,7 @@ Then go to http://localhost:8765/serene-isle.html
 Play online: https://thcphm.github.io/serene-isle/
 
 ## Controls (default)
-- WASD: move · Space: jump · Shift: run · Mouse drag: orbit camera
+- WASD: move · Space: jump (clears obstacles about one tile high) · Shift: run · Mouse drag: orbit camera
 - Left mouse or F: use tool (hold to repeat) · Mouse wheel / 1–9, 0: switch slot
 - Hotbar is customizable: assign tools, food or drinks from the inventory, drag slots to reorder, right-click a slot to clear it
 - Running (Shift) drains energy twice as fast
