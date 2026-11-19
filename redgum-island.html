@@ -610,6 +610,35 @@ function surfaceNets(f,x0,y0,z0,x1,y1,z1,h){
   for(let k=1;k<nz;k++)for(let j=0;j<ny;j++)for(let i=1;i<nx;i++)if((vi(i,j,k)<0)!==(vi(i,j+1,k)<0))quad(cell[ci(i-1,j,k-1)],cell[ci(i,j,k-1)],cell[ci(i,j,k)],cell[ci(i-1,j,k)]);
   for(let k=0;k<nz;k++)for(let j=1;j<ny;j++)for(let i=1;i<nx;i++)if((vi(i,j,k)<0)!==(vi(i,j,k+1)<0))quad(cell[ci(i-1,j-1,k)],cell[ci(i,j-1,k)],cell[ci(i,j,k)],cell[ci(i-1,j,k)]);
   return{P,T}}
+/* quan ao: lop vo SDF day hon than, cat gon o gau ao / tay ao / ong quan -> thay ro mep vai */
+function torsoSDF(x,y,z){const zt=z/.8;let d=sdSeg(x,y,zt,0,.47,0,0,.56,0,.2,.198)*.82;d=smin(d,sdSeg(x,y,zt,0,.58,0,0,.68,0,.198,.205)*.82,.08);
+  d=smin(d,sdSeg(x,y,zt,-.16,.715,0,.16,.715,0,.085,.085)*.82,.07);return d}
+function axisCut(x,y,z,a,c,t){const bx=c[0]-a[0],by=c[1]-a[1],bz=c[2]-a[2],L=Math.hypot(bx,by,bz);return((x-a[0])*bx+(y-a[1])*by+(z-a[2])*bz)/L-t*L}
+function shirtSDF(x,y,z){const t=.013+.016*cl01((.6-y)/.1);
+  let d=Math.max(torsoSDF(x,y,z)-t,.495-y);d=smin(d,sdSeg(x,y,z,0,.74,0,0,.8,0,.088,.084),.02);d=Math.max(d,y-.8);
+  for(const s of[-1,1]){const a=[s*.25,.735,0],c=[s*.33,.6,0];const sl=Math.max(sdSeg(x,y,z,...a,...c,.086,.08),axisCut(x,y,z,a,c,.62));d=smin(d,sl,.03)}
+  return d}
+function pantsSDF(x,y,z){let d=smin(sdSeg(x,y,z/.86,-.07,.42,0,.07,.42,0,.165,.165)*.86-.011,sdSeg(x,y,z/.8,0,.45,0,0,.53,0,.2,.2)*.8-.011,.04);d=Math.max(d,y-.52);
+  for(const s of[-1,1]){const t=.012+.012*cl01((.36-y)/.08);d=smin(d,Math.max(sdSeg(x,y,z,s*.115,.42,0,s*.115,.235,0,.09+t,.08+t),.272-y),.03)}
+  return d}
+function meshSDF(f,b,h){const{P,T}=surfaceNets(f,...b,h),nv=P.length/3,N3=new Float32Array(nv*3),e=.003;
+  const grad=(x,y,z)=>{const gx=f(x+e,y,z)-f(x-e,y,z),gy=f(x,y+e,z)-f(x,y-e,z),gz=f(x,y,z+e)-f(x,y,z-e),l=Math.hypot(gx,gy,gz)||1;return[gx/l,gy/l,gz/l]};
+  for(let v=0;v<nv;v++){let x=P[v*3],y=P[v*3+1],z=P[v*3+2];for(let it=0;it<2;it++){const d=f(x,y,z),g=grad(x,y,z);x-=g[0]*d;y-=g[1]*d;z-=g[2]*d}
+    P[v*3]=x;P[v*3+1]=y;P[v*3+2]=z;const g=grad(x,y,z);N3[v*3]=g[0];N3[v*3+1]=g[1];N3[v*3+2]=g[2]}
+  for(let t=0;t<T.length;t+=3){const a=T[t]*3,b2=T[t+1]*3,c=T[t+2]*3;const ux=P[b2]-P[a],uy=P[b2+1]-P[a+1],uz=P[b2+2]-P[a+2],wx=P[c]-P[a],wy=P[c+1]-P[a+1],wz=P[c+2]-P[a+2];
+    const nx=uy*wz-uz*wy,ny=uz*wx-ux*wz,nz=ux*wy-uy*wx;if(nx*N3[a]+ny*N3[a+1]+nz*N3[a+2]<0){const tmp=T[t+1];T[t+1]=T[t+2];T[t+2]=tmp}}
+  return{P,N3,T}}
+function skinW(x,y,z){const sc=[];BODY_SEG.forEach((s,q)=>{sc.push({q,s:(sdSeg(x,y,z,...s.a,...s.c,0,0)+.0001)/s.r})});sc.sort((a,b)=>a.s-b.s);
+  const top=sc.slice(0,4).map(o=>({q:o.q,w:Math.pow(1/o.s,8)}));const sum=top.reduce((a,o)=>a+o.w,0);return top.map(o=>[o.q,o.w/sum])}
+let CLOTH_BASE=null;
+function clothBase(){if(CLOTH_BASE)return CLOTH_BASE;const out={};
+  for(const[k,f,b]of[['shirt',shirtSDF,[-.46,.44,-.3,.46,.84,.3]],['pants',pantsSDF,[-.3,.24,-.26,.3,.56,.26]]]){const m=meshSDF(f,b,.016),nv=m.P.length/3;m.W=[];m.hem=new Float32Array(nv);
+    for(let v=0;v<nv;v++){const x=m.P[v*3],y=m.P[v*3+1],z=m.P[v*3+2];m.W.push(skinW(x,y,z));
+      // gan mep cat -> dam mau (vien gau)
+      let e=k==='shirt'?y-.495:y-.272;if(k==='shirt'){for(const s of[-1,1])if(sdSeg(x,y,z,s*.25,.735,0,s*.33,.6,0,0,0)<.11&&s*x>.27)e=Math.min(e,Math.abs(axisCut(x,y,z,[s*.25,.735,0],[s*.33,.6,0],.62)))}
+      m.hem[v]=cl01(1-(e-.004)/.014)}
+    out[k]=m}
+  return CLOTH_BASE=out}
 let BODY_BASE=null;
 function bodyBase(){if(BODY_BASE)return BODY_BASE;
   const{P,T}=surfaceNets(bodySDF,-.5,-.03,-.34,.5,1.38,.34,.017),nv=P.length/3,N3=new Float32Array(nv*3),e=.003;
@@ -642,6 +671,10 @@ function makeHuman(o){
     else if(b.startsWith('sh'))cc=h<.55?shirt:skin;else if(b.startsWith('el')||b.startsWith('hn'))cc=skin;
     else if(b.startsWith('th'))cc=y>.275?pants:skin;else cc=y<.15?sock:skin;
     c.set(cc);col.push(c.r,c.g,c.b);const w=base.W[v];for(let q=0;q<4;q++){si.push(w[q]?bi(BODY_SEG[w[q][0]].b):0);sw.push(w[q]?w[q][1]:0)}}
+  {const cb=clothBase();for(const[k,cf]of[['shirt',shirt],['pants',pants]]){const m=cb[k],b0=pos.length/3,c0=new THREE.Color(cf),cd=c0.clone().multiplyScalar(.78);
+    for(let v=0;v<m.P.length/3;v++){pos.push(m.P[v*3],m.P[v*3+1],m.P[v*3+2]);nor.push(m.N3[v*3],m.N3[v*3+1],m.N3[v*3+2]);const cc=c0.clone().lerp(cd,m.hem[v]);col.push(cc.r,cc.g,cc.b);
+      const w=m.W[v];for(let q=0;q<4;q++){si.push(w[q]?bi(BODY_SEG[w[q][0]].b):0);sw.push(w[q]?w[q][1]:0)}}
+    for(const t of m.T)idx.push(b0+t)}}
   function add(geo,m,cf,bn){if(m)geo.applyMatrix4(m);const p=geo.attributes.position,nn=geo.attributes.normal,b0=pos.length/3,i=bi(bn);c.set(cf);
     for(let k=0;k<p.count;k++){pos.push(p.getX(k),p.getY(k),p.getZ(k));nor.push(nn.getX(k),nn.getY(k),nn.getZ(k));col.push(c.r,c.g,c.b);si.push(i,0,0,0);sw.push(1,0,0,0)}
     if(geo.index)for(const v of geo.index.array)idx.push(b0+v);else for(let k=0;k<p.count;k++)idx.push(b0+k)}
