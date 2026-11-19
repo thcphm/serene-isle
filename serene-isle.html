@@ -133,15 +133,30 @@ body.intro #hud,body.intro #touch{display:none}
 #title ul{margin:0 0 16px;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:14px;font-weight:600}
 #title .go{display:flex;gap:10px;flex-wrap:wrap}
 #title .btn{font-size:18px;padding:8px 22px}
-#title{background:linear-gradient(180deg,rgba(255,214,150,.15),rgba(40,20,8,.6))}
-#title .menu{width:min(420px,100%);display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:26px 24px;border-radius:26px;background:rgba(255,246,226,.93);border:4px solid var(--bark);box-shadow:0 10px 0 rgba(58,39,21,.45);box-sizing:border-box}
-#title .logo{position:relative;padding-top:6px}#title .logo .sun{position:absolute;left:50%;top:-34px;width:64px;height:64px;margin-left:-32px;border-radius:50%;background:radial-gradient(circle,#ffe08a,#f3a64a);box-shadow:0 0 30px #ffcf7a;animation:sunb 4s ease-in-out infinite}
-@keyframes sunb{50%{transform:translateY(-5px)}}
-#title h1{position:relative;margin:0;font-size:clamp(38px,9vw,56px);line-height:1;font-weight:800;color:var(--red);text-shadow:0 3px 0 #f3c27a}#title .en{position:relative;margin:4px 0 0;font-weight:800;letter-spacing:.3em;text-transform:uppercase;font-size:13px;color:#4f86a6}
-#title .tag{margin:2px 0 6px;font-size:15px}
-.mbtns{display:flex;flex-direction:column;gap:8px;width:100%}.mb{font:800 18px var(--f-ui);padding:11px 16px;border-radius:14px;border:3px solid var(--bark);background:var(--paper-2);color:var(--ink);cursor:pointer;box-shadow:0 4px 0 #6a4a2a;transition:transform .08s}
-.mb:hover{transform:translateY(-2px)}.mb:active{transform:translateY(2px);box-shadow:0 2px 0 #6a4a2a}.mb.main{background:#6ca94a;color:#fff;border-color:#3f6a2a;box-shadow:0 4px 0 #3f6a2a}.mb.don{background:#f6d6d0;border-color:#b0503e;color:#8a2f22;box-shadow:0 4px 0 #b0503e}
-.mb:focus-visible{outline:3px solid #2f7fd0;outline-offset:2px}#title .ver{margin:4px 0 0;font-size:12px;color:var(--ink-2)}
+#title{background:none;align-items:stretch;justify-content:flex-start;padding:0;overflow:hidden;color-scheme:light}
+#title .tglow{position:absolute;inset:0;background:linear-gradient(90deg,rgba(28,14,24,.82) 0%,rgba(40,20,30,.55) 34%,rgba(40,20,30,0) 62%),linear-gradient(0deg,rgba(255,140,70,.28),rgba(255,140,70,0) 40%);pointer-events:none}
+#title .motes{position:absolute;inset:0;pointer-events:none}#title .motes i{position:absolute;left:var(--x);bottom:-10px;width:var(--s);height:var(--s);border-radius:50%;background:#ffe7a8;box-shadow:0 0 10px 2px rgba(255,214,130,.8);opacity:0;animation:mote var(--d) linear infinite;animation-delay:var(--w)}
+@keyframes mote{0%{transform:translate(0,0);opacity:0}15%{opacity:.9}100%{transform:translate(40px,-95vh);opacity:0}}
+#title .tcol{position:relative;display:flex;flex-direction:column;justify-content:center;gap:10px;width:min(460px,100%);padding:40px 48px;box-sizing:border-box;min-height:100%;animation:tin .9s ease-out both}
+@keyframes tin{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+#title .tbadge{align-self:flex-start;padding:5px 12px;border-radius:999px;background:rgba(255,236,200,.14);border:1px solid rgba(255,236,200,.35);color:#ffe9c4;font:700 13px var(--f-ui);letter-spacing:.04em}
+#title .tname{margin:4px 0 0;font:800 clamp(46px,7vw,78px)/0.95 var(--f-ui);color:#fff1d6;background:linear-gradient(180deg,#fff6e2 30%,#ffbf7a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 4px 0 rgba(120,40,20,.55)) drop-shadow(0 10px 24px rgba(0,0,0,.35))}
+#title .tname span{display:block;font-size:.62em}
+#title .ten{margin:2px 0 0;font:800 13px var(--f-ui);letter-spacing:.32em;color:#8fd3ea}
+#title .ttag{margin:6px 0 14px;font:500 15px/1.55 var(--f-ui);color:rgba(255,240,220,.88);max-width:380px}
+.mbtns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px}
+.mb{display:flex;align-items:center;gap:14px;text-align:left;font:800 18px var(--f-ui);padding:11px 16px;border-radius:16px;border:1px solid rgba(255,236,200,.28);background:rgba(20,10,18,.42);color:#fff1d6;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .18s cubic-bezier(.2,.8,.2,1),background .18s,border-color .18s,box-shadow .18s}
+.mb .mi{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:rgba(255,236,200,.14);font-size:17px}
+.mb .mt{display:flex;flex-direction:column;line-height:1.1}.mb small{font:600 12px var(--f-ui);color:rgba(255,236,210,.7);margin-top:3px}
+.mb:hover,.mb:focus-visible{transform:translateX(6px);background:rgba(60,30,30,.55);border-color:rgba(255,214,150,.7);box-shadow:0 0 0 1px rgba(255,214,150,.25),0 10px 24px rgba(0,0,0,.25);outline:none}
+.mb:active{transform:translateX(3px) scale(.98)}
+.mb.main{background:linear-gradient(90deg,#f0884e,#e8604a);border-color:rgba(255,220,180,.6);box-shadow:0 8px 22px rgba(232,96,74,.35)}.mb.main .mi{background:rgba(255,255,255,.22)}.mb.main small{color:rgba(255,245,235,.85)}
+.mb.main:hover{background:linear-gradient(90deg,#f59a5c,#ee6c54)}
+.mb.don .mi{color:#ff8a8a}
+#title .tfoot{position:absolute;left:48px;right:24px;bottom:18px;display:flex;justify-content:space-between;gap:12px;font:600 12px var(--f-ui);color:rgba(255,236,210,.6)}
+body.menu #hud,body.menu #touch{display:none}
+@media (max-width:700px){#title .tglow{background:linear-gradient(0deg,rgba(28,14,24,.85) 0%,rgba(40,20,30,.5) 60%,rgba(40,20,30,.15))}#title .tcol{width:100%;padding:28px 20px 60px;justify-content:flex-end;align-items:center;text-align:center}#title .tbadge{align-self:center}.mbtns{max-width:none}#title .tfoot{left:16px;right:16px;font-size:11px}}
+@media (prefers-reduced-motion:reduce){#title .motes{display:none}#title .tcol{animation:none}}
 #create{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(40,22,8,.55);padding:16px;box-sizing:border-box}#create[hidden]{display:none}
 #create .card{background:var(--paper);border:4px solid var(--bark);border-radius:24px;padding:22px 26px;max-width:600px;width:100%;box-shadow:0 10px 0 rgba(58,39,21,.5);box-sizing:border-box}
 #create h2{margin:0;font-size:34px;font-weight:800;color:var(--red)}#create .tag{margin:4px 0 12px;font-weight:600;color:var(--ink-2)}
@@ -214,18 +229,22 @@ body.intro #hud,body.intro #touch{display:none}
   </div>
 </div>
 <div id="title">
-  <div class="menu">
-    <div class="logo"><div class="sun"></div><h1>Đảo Bình Yên</h1><p class="en">Serene Isle</p></div>
-    <p class="tag">Bỏ lại thành phố ồn ào và những deadline không hồi kết. Một hòn đảo đất đỏ, một ông lão, và một cuộc sống chậm rãi đang chờ bạn.</p>
+  <div class="tglow"></div>
+  <div class="motes" aria-hidden="true"><i style="--x:0%;--d:6s;--w:0s;--s:3px"></i><i style="--x:53%;--d:13s;--w:11s;--s:4px"></i><i style="--x:6%;--d:11s;--w:10s;--s:5px"></i><i style="--x:59%;--d:9s;--w:9s;--s:6px"></i><i style="--x:12%;--d:7s;--w:8s;--s:3px"></i><i style="--x:65%;--d:14s;--w:7s;--s:4px"></i><i style="--x:18%;--d:12s;--w:6s;--s:5px"></i><i style="--x:71%;--d:10s;--w:5s;--s:6px"></i><i style="--x:24%;--d:8s;--w:4s;--s:3px"></i><i style="--x:77%;--d:6s;--w:3s;--s:4px"></i><i style="--x:30%;--d:13s;--w:2s;--s:5px"></i><i style="--x:83%;--d:11s;--w:1s;--s:6px"></i><i style="--x:36%;--d:9s;--w:0s;--s:3px"></i><i style="--x:89%;--d:7s;--w:11s;--s:4px"></i><i style="--x:42%;--d:14s;--w:10s;--s:5px"></i><i style="--x:95%;--d:12s;--w:9s;--s:6px"></i><i style="--x:48%;--d:10s;--w:8s;--s:3px"></i><i style="--x:1%;--d:8s;--w:7s;--s:4px"></i><i style="--x:54%;--d:6s;--w:6s;--s:5px"></i><i style="--x:7%;--d:13s;--w:5s;--s:6px"></i><i style="--x:60%;--d:11s;--w:4s;--s:3px"></i><i style="--x:13%;--d:9s;--w:3s;--s:4px"></i></div>
+  <div class="tcol">
+    <div class="tbadge">🌴 Một hành trình chữa lành</div>
+    <h1 class="tname"><span>Đảo</span> Bình Yên</h1>
+    <p class="ten">S E R E N E &nbsp; I S L E</p>
+    <p class="ttag">Bỏ lại thành phố ồn ào và những deadline không hồi kết.<br>Một hòn đảo đất đỏ, một ông lão, và nhịp sống chậm rãi đang chờ bạn.</p>
     <nav class="mbtns">
-      <button class="mb main" id="bContinue" type="button" hidden>▶ Tiếp tục</button>
-      <button class="mb main" id="bNew" type="button">🌱 Đảo mới</button>
-      <button class="mb" id="bSet" type="button">⚙ Cài đặt</button>
-      <button class="mb" id="bCred" type="button">✦ Ghi công</button>
-      <button class="mb don" id="bDon" type="button">♥ Ủng hộ tác giả</button>
+      <button class="mb main" id="bContinue" type="button" hidden><span class="mi">▶</span><span class="mt">Tiếp tục<small id="contInfo"></small></span></button>
+      <button class="mb main" id="bNew" type="button"><span class="mi">🌱</span><span class="mt">Đảo mới<small>Bắt đầu câu chuyện</small></span></button>
+      <button class="mb" id="bSet" type="button"><span class="mi">⚙</span><span class="mt">Cài đặt</span></button>
+      <button class="mb" id="bCred" type="button"><span class="mi">✦</span><span class="mt">Ghi công</span></button>
+      <button class="mb don" id="bDon" type="button"><span class="mi">♥</span><span class="mt">Ủng hộ tác giả</span></button>
     </nav>
-    <p class="ver">Phiên bản web · lưu tự động trên trình duyệt này</p>
   </div>
+  <div class="tfoot"><span>Thuc Pham · 2026</span><span>Phiên bản web · tự lưu trên trình duyệt</span></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1515,7 +1534,7 @@ function renderPanel(){let h='';if(uiOpen==='settings'){panel.innerHTML=settings
       <div class="req" style="margin-top:8px">Lập trình cùng Claude (Anthropic) · Đồ hoạ 3D: Three.js · Âm nhạc lofi tạo theo thủ tục bằng Web Audio</div>
       <div class="req" style="margin-top:8px">Cảm ơn bạn đã ghé đảo. Mong bạn tìm được chút bình yên ở đây. 🍃</div></div>`}
   else if(uiOpen==='donate'){h+=head('Ủng hộ tác giả','Nếu bạn thích Đảo Bình Yên, một ly cà phê sẽ giúp game có thêm nhiều mùa mới.')+`<div class="detail" style="display:block;text-align:center;line-height:1.6">
-      <img src="donate-qr.jpg" alt="Mã VietQR ủng hộ Thuc Pham" style="width:min(260px,70vw);border-radius:14px;border:3px solid var(--bark);display:block;margin:0 auto 8px">
+      <img src="donate-qr.jpg" alt="Mã VietQR ủng hộ Thuc Pham" style="width:min(270px,66vw);aspect-ratio:720/1110;object-fit:cover;border-radius:18px;box-shadow:0 6px 18px rgba(0,0,0,.22);display:block;margin:2px auto 10px">
       <div>Mở app ngân hàng bất kỳ, quét mã VietQR để ủng hộ <b>Thuc Pham</b>.</div><div class="req">Mỗi sự ủng hộ, dù nhỏ, đều là động lực rất lớn. Cảm ơn bạn! ♥</div>
       <div style="margin-top:8px"><a class="btn" href="https://github.com/thcphm/serene-isle" target="_blank" rel="noopener">⭐ Tặng sao trên GitHub</a></div></div>`}
   else if(uiOpen==='petname'){const t=G.flags.petPick||'dog';h+=head(`Đặt tên cho ${t==='dog'?'cún':'mèo'} của bạn`,'Tên sẽ hiện khi bạn vuốt ve nó.')+`<div class="detail"><input id="petName" maxlength="14" value="${t==='dog'?'Mực':'Mướp'}" style="font:700 18px var(--f-ui);padding:8px 10px;border-radius:10px;border:3px solid var(--bark);flex:1"><button class="btn alt" data-a="petok" type="button">Nhận nuôi</button></div>`}
@@ -1865,6 +1884,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last
   /* ambience */
   if(active&&AC){ambT-=dt;if(ambT<=0){ambT=2+Math.random()*5;if(isNight()){for(let n=0;n<3;n++)setTimeout(()=>tone(4300,.05,'square',.012),n*90)}else{const f=2200+Math.random()*900;tone(f,.08,'sine',.025,f*1.3);setTimeout(()=>tone(f*1.1,.1,'sine',.025,f*1.4),120)}}}
   if(IN.on){introUpdate(dt);if(IN.cs){renderer.render(IN.cs.S,IN.cs.cam);return}}
+  if(MENU.on&&!IN.on){MENU.a+=dt*.035;G.time=17.55*60;const r=34,cx=CX+TR(0,8)[0],cz=CZ+TR(0,8)[1];camera.position.set(cx+Math.cos(MENU.a)*r,16+Math.sin(MENU.a*.7)*2,cz+Math.sin(MENU.a)*r);camera.lookAt(cx,1.2,cz);if(((T*10)|0)%10===0)applyDay()}
   renderer.render(scene,camera)}
 
 
@@ -2118,19 +2138,22 @@ function showCreate(){$('#title').hidden=true;$('#create').hidden=false;
     CR.cam=new THREE.PerspectiveCamera(30,1,.1,20);CR.cam.position.set(0,.85,3.1);CR.cam.lookAt(0,.62,0);for(const g of['m','f']){CR.h[g]=makeHuman(lookOpts(g));CR.sc.add(CR.h[g].g)}}
   crSet(CR.g);$('#cName').value=DEF_NAME[CR.g];cancelAnimationFrame(CR.raf);crDraw(performance.now());setTimeout(()=>{$('#cName').focus();$('#cName').select()},50)}
 function createDone(){const n=$('#cName').value.trim().replace(/[<>&"]/g,'');if(!n){$('#cErr').hidden=false;$('#cName').focus();return}$('#cErr').hidden=true;
-  G.look={g:CR.g,name:n};rebuildPlayer();cancelAnimationFrame(CR.raf);$('#create').hidden=true;audioOn();introStart()}
+  menuOff();G.look={g:CR.g,name:n};rebuildPlayer();cancelAnimationFrame(CR.raf);$('#create').hidden=true;audioOn();introStart()}
 document.querySelectorAll('.gbtn').forEach(b=>b.addEventListener('click',()=>crSet(b.dataset.g)));
 $('#cGo').addEventListener('click',createDone);$('#cBack').addEventListener('click',()=>{cancelAnimationFrame(CR.raf);$('#create').hidden=true;$('#title').hidden=false});
 panel.addEventListener('keydown',e=>{if(e.target.id==='petName'){e.stopPropagation();if(e.key==='Enter')adoptPet(e.target.value.trim().replace(/[<>&"]/g,'').slice(0,14))}});
 $('#cName').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')createDone()});
 function start(){setTimeout(start2,60)}
 const TIPS=['Mẹo: đứng yên ngắm hoàng hôn để tăng Bình yên 🍃','Mẹo: bấm V để ngồi nghỉ, thời gian trôi nhanh hơn','Mẹo: 23 giờ phải về lều, không thì mất đồ trong túi','Mẹo: sông nông có thể lội qua','Mẹo: chai thủy tinh trên bãi biển có thể chứa bản đồ kho báu','Mẹo: bấm M để xem toàn bộ hòn đảo','Mẹo: trời mưa sẽ tự tưới ruộng'];
+const MENU={on:false,time:0,a:0};
+function menuOff(){if(!MENU.on)return;MENU.on=false;G.time=MENU.time;document.body.classList.remove('menu');applyDay()}
 async function loadProg(p,t){$('#lFill').style.width=Math.round(p*100)+'%';$('#lStep').textContent=t;await new Promise(r=>setTimeout(r,0))}
 async function start2(){
   $('#lTip').textContent=TIPS[Math.floor(Math.random()*TIPS.length)];const tipI=setInterval(()=>{$('#lTip').textContent=TIPS[Math.floor(Math.random()*TIPS.length)]},2600);
-  const sv=loadSave();await loadProg(.02,'Đang tìm hòn đảo trên bản đồ…');await buildWorld(sv,loadProg);await loadProg(1,'Xong! Chào mừng tới đảo.');clearInterval(tipI);if(sv)rebuildPlayer();applySet();$('#gear').onclick=()=>{if(!uiOpen)openPanel('settings')};$('#bSet').onclick=()=>openPanel('settings');$('#bCred').onclick=()=>openPanel('credits');$('#bDon').onclick=()=>openPanel('donate');if(sv)$('#bContinue').hidden=false;
+  const sv=loadSave();await loadProg(.02,'Đang tìm hòn đảo trên bản đồ…');await buildWorld(sv,loadProg);await loadProg(1,'Xong! Chào mừng tới đảo.');clearInterval(tipI);if(sv)rebuildPlayer();applySet();$('#gear').onclick=()=>{if(!uiOpen)openPanel('settings')};document.body.classList.add('menu');MENU.on=true;MENU.time=G.time;if(sv)$('#contInfo').textContent=`${NM()} · ${SEAS[season()].n} ${seasonDay()} · ngày ${G.day}`;
+  $('#bSet').onclick=()=>openPanel('settings');$('#bCred').onclick=()=>openPanel('credits');$('#bDon').onclick=()=>openPanel('donate');if(sv)$('#bContinue').hidden=false;
   camYaw=Math.PI*.15;renderHUD();applyDay();requestAnimationFrame(frame);$('#loading').hidden=true;
-  $('#bContinue').onclick=()=>{audioOn();$('#title').hidden=true;running=true;renderQuest();toast(`Chào mừng ${NM()} trở lại, ngày ${G.day}!`)};
+  $('#bContinue').onclick=()=>{menuOff();audioOn();$('#title').hidden=true;running=true;renderQuest();toast(`Chào mừng ${NM()} trở lại, ngày ${G.day}!`)};
   $('#bNew').onclick=()=>{try{localStorage.removeItem(SAVE_KEY)}catch(e){}if(sv){try{sessionStorage.setItem('rg-intro','1')}catch(e){}location.reload();return}showCreate()};
   let auto=false;try{auto=sessionStorage.getItem('rg-intro')==='1';sessionStorage.removeItem('rg-intro')}catch(e){}if(auto&&!sv){showCreate()}
   setInterval(()=>{if(running)save()},45000);addEventListener('beforeunload',()=>{if(running)save()});
