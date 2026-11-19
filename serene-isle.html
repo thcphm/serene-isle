@@ -161,7 +161,8 @@ body.intro #hud,body.intro #touch{display:none}
 .mb:active{transform:translateX(3px) scale(.98)}
 .mb.main{background:linear-gradient(90deg,#f0884e,#e8604a);border-color:rgba(255,220,180,.6);box-shadow:0 8px 22px rgba(232,96,74,.35)}.mb.main .mi{background:rgba(255,255,255,.22)}.mb.main small{color:rgba(255,245,235,.85)}
 .mb.main:hover{background:linear-gradient(90deg,#f59a5c,#ee6c54)}
-.mb.don .mi{color:#ff8a8a}.mb.del{font-size:15px;padding:8px 16px;background:rgba(20,10,18,.25)}.mb.del .mi{width:30px;height:30px;font-size:14px}.mb.del:hover,.mb.del:focus-visible{background:rgba(120,30,30,.6);border-color:#ff8a7a}
+.mb.don .mi{color:#ff8a8a}.isls{display:flex;flex-direction:column;gap:8px;margin-top:10px}.isl{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--paper-2);border:2px solid transparent}.isl.cur{border-color:#6aa84f}.isl.empty{opacity:.75}.isl .si{font-size:24px;line-height:1}.isl .sm{flex:1;display:flex;flex-direction:column;text-align:left}.isl .sm span{font-size:13px;opacity:.75}.btn.sdel{background:#c4442f;box-shadow:0 3px 0 #7a2418;padding-left:10px;padding-right:10px}
+.mb.del{font-size:15px;padding:8px 16px;background:rgba(20,10,18,.25)}.mb.del .mi{width:30px;height:30px;font-size:14px}.mb.del:hover,.mb.del:focus-visible{background:rgba(120,30,30,.6);border-color:#ff8a7a}
 #title .tfoot{position:absolute;left:48px;right:24px;bottom:18px;display:flex;justify-content:space-between;gap:12px;font:600 12px var(--f-ui);color:rgba(255,236,210,.6)}
 body.menu #hud,body.menu #touch{display:none}
 @media (max-width:700px){#title .tglow{background:linear-gradient(0deg,rgba(28,14,24,.85) 0%,rgba(40,20,30,.5) 60%,rgba(40,20,30,.15))}#title .tcol{width:100%;padding:28px 20px 60px;justify-content:flex-end;align-items:center;text-align:center}#title .tbadge{align-self:center}.mbtns{max-width:none}#title .tfoot{left:16px;right:16px;font-size:11px}}
@@ -251,7 +252,7 @@ body.menu #hud,body.menu #touch{display:none}
       <button class="mb" id="bSet" type="button"><span class="mi">⚙</span><span class="mt">Cài đặt</span></button>
       <button class="mb" id="bCred" type="button"><span class="mi">✦</span><span class="mt">Ghi công</span></button>
       <button class="mb don" id="bDon" type="button"><span class="mi">♥</span><span class="mt">Ủng hộ tác giả</span></button>
-      <button class="mb del" id="bDel" type="button" hidden><span class="mi">🗑</span><span class="mt">Xoá đảo</span></button>
+      <button class="mb del" id="bDel" type="button" hidden><span class="mi">🏝</span><span class="mt">Các hòn đảo<small id="slotInfo"></small></span></button>
     </nav>
   </div>
   <div class="tfoot"><span>Thuc Pham · 2026</span><span>Phiên bản web · tự lưu trên trình duyệt</span></div>
@@ -263,7 +264,14 @@ body.menu #hud,body.menu #touch{display:none}
 const $=s=>document.querySelector(s);
 const V3=THREE.Vector3;
 const N=800, LV=0.5, SEA=0.32;let CX=N>>1,CZ=N>>1,TDIR=0;
-const SAVE_KEY='redgum-island-save-v5';
+const SAVE_BASE='redgum-island-save-v5',SLOTS=4,slotKey=i=>i?SAVE_BASE+'-s'+i:SAVE_BASE;
+function slotInfo(i){try{const s=JSON.parse(localStorage.getItem(slotKey(i)));return s&&s.v===5?{name:(s.look&&s.look.name)||'Bạn',g:s.look&&s.look.g,day:s.day||1,coins:s.coins||0,at:s.at||0}:null}catch(e){return null}}
+let SLOT=0;try{SLOT=Math.max(0,Math.min(SLOTS-1,+(localStorage.getItem('serene-slot')||0)||0))}catch(e){}
+let NEWI=false;try{NEWI=sessionStorage.getItem('rg-intro')==='1'}catch(e){}
+if(!NEWI&&!slotInfo(SLOT)){let b=-1,bt=-1;for(let i=0;i<SLOTS;i++){const f=slotInfo(i);if(f&&f.at>bt){bt=f.at;b=i}}if(b>=0)SLOT=b}
+let SAVE_KEY=slotKey(SLOT);
+function goSlot(i,create){try{localStorage.setItem('serene-slot',i);if(create)sessionStorage.setItem('rg-intro','1')}catch(e){}location.reload()}
+function freeSlot(){for(let i=0;i<SLOTS;i++)if(!slotInfo(i))return i;return -1}
 let SEED=Math.floor(Math.random()*1e6);
 
 /* ---------- random & noise ---------- */
@@ -1515,7 +1523,7 @@ function settingsHTML(){let h=head('Cài đặt','Thiết lập được lưu t�
   else h+=sld('sens','Độ nhạy chuột',10,100)+tog('invY','Đảo trục dọc camera')+Object.keys(KEYN).map(k=>`<div class="srow"><label>${KEYN[k]}</label><button class="kb ${REBIND===k?'wait':''}" data-a="bind" data-v="${k}" type="button">${REBIND===k?'Bấm phím…':keyName(SET.keys[k])}</button><span></span></div>`).join('')
     +'<p class="sub" style="margin-top:8px">Bấm vào ô phím rồi nhấn phím mới. Esc để huỷ. Phím mũi tên luôn dùng để di chuyển.</p>';
   return h+'<div class="detail" style="justify-content:flex-end"><button class="btn" data-a="sreset" type="button" style="background:#9a8a6a;box-shadow:0 3px 0 #6a5a3a">Khôi phục mặc định</button><button class="btn alt" data-a="close" type="button">Xong</button></div>'}
-let CRLIC=false;
+let CRLIC=false,WIPE=0;
 function renderPanel(){let h='';panel.classList.toggle('credp',uiOpen==='credits');if(uiOpen!=='credits')CRLIC=false;if(uiOpen==='settings'){panel.innerHTML=settingsHTML();return}
   if(uiOpen==='shop'){h+=head('Ông Bảy mua bán','Ông mua mọi thứ cháu kiếm được trên đảo.')+`<div class="tabs"><button class="tab ${shopTab==='buy'?'on':''}" data-a="stab" data-v="buy" type="button">Mua</button><button class="tab ${shopTab==='sell'?'on':''}" data-a="stab" data-v="sell" type="button">Bán</button></div>`;
     if(shopTab==='buy'){const{L,U}=shopBuyList();h+='<div class="rows">'+L.map(x=>`<div class="row"><div class="ic">${ITEMS[x.id].i}</div><div class="nm">${ITEMS[x.id].n}<small>${x.p} xu · đang có ${G.inv[x.id]||0}${ITEMS[x.id].seed?` · lớn trong ${CROPS[ITEMS[x.id].seed].days} ngày`:ITEMS[x.id].food?` · ${eatText(ITEMS[x.id])}`:''}</small></div><div class="acts"><button class="btn" data-a="buy" data-v="${x.id}" data-p="${x.p}" data-n="1" type="button" ${G.coins<x.p?'disabled':''}>Mua 1</button><button class="btn" data-a="buy" data-v="${x.id}" data-p="${x.p}" data-n="5" type="button" ${G.coins<x.p*5?'disabled':''}>Mua 5</button></div></div>`).join('')
@@ -1553,7 +1561,8 @@ function renderPanel(){let h='';panel.classList.toggle('credp',uiOpen==='credits
     <div class="crs"><h3>Âm nhạc</h3><p>Lofi tạo theo thủ tục bằng Web Audio</p></div>
     <div class="crs"><h3>Cảm ơn đặc biệt</h3><p>Gia đình và bạn bè<br>Những người chơi thử<br>Mọi người ủng hộ tác giả<br>Và bạn, người đã ghé đảo</p></div>
     <p class="crnote">Game được làm ở Việt Nam, với tình yêu dành cho những làng quê yên bình, những buổi chiều không vội và những người đang cần một chỗ để nghỉ ngơi. Mong bạn tìm được chút bình yên ở đây. 🍃</p>`}</div>`}
-  else if(uiOpen==='wipe'){h+=head('Xoá hòn đảo này?',`Toàn bộ tiến trình của <b>${NM()}</b> (ngày ${G.day}, ${G.coins} xu, nhà cửa, vật nuôi, bộ sưu tập) sẽ bị xoá khỏi trình duyệt. Không thể hoàn tác.`)+'<div class="detail" style="justify-content:flex-end"><button class="btn alt" data-a="close" type="button">Giữ lại</button><button class="btn" data-a="wipe" type="button" style="background:#c4442f;box-shadow:0 3px 0 #7a2418">Xoá vĩnh viễn</button></div>'}
+  else if(uiOpen==='islands'){h+=head('Các hòn đảo của bạn',`Lưu được tối đa ${SLOTS} hòn đảo, mỗi đảo một bản đồ riêng.`)+'<div class="isls">'+[...Array(SLOTS).keys()].map(i=>{const f=slotInfo(i);return f?`<div class="isl ${i===SLOT?'cur':''}"><div class="si">${f.g==='f'?'👩':'👨'}</div><div class="sm"><b>${f.name}</b><span>Ngày ${f.day} · ${f.coins} xu${i===SLOT?' · đang mở':''}</span></div><button class="btn alt" data-a="slotplay" data-v="${i}" type="button">Chơi</button><button class="btn sdel" data-a="slotdel" data-v="${i}" type="button" aria-label="Xoá đảo ${i+1}">🗑</button></div>`:`<div class="isl empty"><div class="si">🌊</div><div class="sm"><b>Ô trống</b><span>Đảo ${i+1}</span></div><button class="btn alt" data-a="slotnew" data-v="${i}" type="button">Tạo đảo</button></div>`}).join('')+'</div>'}
+  else if(uiOpen==='wipe'){const f=slotInfo(WIPE)||{name:'?',day:0,coins:0};h+=head('Xoá hòn đảo này?',`Toàn bộ tiến trình của <b>${f.name}</b> (ngày ${f.day}, ${f.coins} xu, nhà cửa, vật nuôi, bộ sưu tập) sẽ bị xoá khỏi trình duyệt. Không thể hoàn tác.`)+'<div class="detail" style="justify-content:flex-end"><button class="btn alt" data-a="wipeno" type="button">Giữ lại</button><button class="btn" data-a="wipe" type="button" style="background:#c4442f;box-shadow:0 3px 0 #7a2418">Xoá vĩnh viễn</button></div>'}
   else if(uiOpen==='donate'){h+=head('Ủng hộ tác giả','Nếu bạn thích Đảo Bình Yên, một ly cà phê sẽ giúp game có thêm nhiều mùa mới.')+`<div class="detail" style="display:block;text-align:center;line-height:1.6">
       <img src="donate-qr.jpg" alt="Mã VietQR ủng hộ Thuc Pham" style="width:min(270px,66vw);aspect-ratio:720/1110;object-fit:cover;border-radius:18px;box-shadow:0 6px 18px rgba(0,0,0,.22);display:block;margin:2px auto 10px">
       <div>Mở app ngân hàng bất kỳ, quét mã VietQR để ủng hộ <b>Thuc Pham</b>.</div><div class="req">Mỗi sự ủng hộ, dù nhỏ, đều là động lực rất lớn. Cảm ơn bạn! ♥</div>
@@ -1577,7 +1586,11 @@ panel.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b
   if(a==='stog'){SET[v]=b.dataset.b==='1';applySet();saveSet();renderPanel();return}if(a==='bind'){REBIND=v;renderPanel();return}
   if(a==='sreset'){SET=JSON.parse(JSON.stringify(SET_DEF));applySet();saveSet();renderPanel();return}
   if(a==='close')return closePanel();
-  if(a==='wipe'){try{localStorage.removeItem(SAVE_KEY)}catch(e){}location.reload();return}
+  if(a==='wipe'){try{localStorage.removeItem(slotKey(WIPE))}catch(e){}if(WIPE===SLOT){location.reload();return}uiOpen='islands';renderPanel();return}
+  if(a==='wipeno'){uiOpen='islands';renderPanel();return}
+  if(a==='slotdel'){WIPE=+v;uiOpen='wipe';renderPanel();return}
+  if(a==='slotplay'){if(+v===SLOT&&running){closePanel();return}if(+v===SLOT&&MENU.on){closePanel();$('#bContinue').click();return}goSlot(+v);return}
+  if(a==='slotnew'){if(+v===SLOT&&!slotInfo(SLOT)&&MENU.on){closePanel();showCreate();return}goSlot(+v,true);return}
   if(a==='crlic'){CRLIC=!CRLIC;renderPanel();return}
   if(a==='stab')shopTab=v;if(a==='itab')invTab=v;if(a==='isel')invSel=v;if(a==='hbset'){const[sl,id]=v.split('|');hbAssign(+sl,id)}if(a==='hbclr')hbClear(+v);
   if(a==='buy'&&v.startsWith('a_')){const p=+b.dataset.p;if(G.coins>=p&&buyAnimal(v.slice(2))){G.coins-=p;SFX.coin();save()}renderPanel();return}
@@ -1825,8 +1838,8 @@ function animalInteract(){const A=animalNear();if(!A)return null;
 const OTL=Object.keys(OT);let GENT=null;
 function serialize(){const objs=[],orem=[],tiles=[],pl=[];for(let k=0;k<N*N;k++){const o=objAt[k],g=GENT?GENT[k]:0;if(g&&(!o||o.type!==OTL[g-1]))orem.push(k);if(o&&(!g||o.type!==OTL[g-1]||o.berries===0))objs.push([k,o.type,o.berries,+o.rot.toFixed(2),+o.sc.toFixed(2)]);
   if(soil[k]===1||cropAt[k])tiles.push([k,soil[k],wet[k],cropAt[k]?cropAt[k].type:0,cropAt[k]?cropAt[k].g:0]);if(placedAt[k])pl.push([k,placedAt[k].type,placedAt[k].rot])}
-  return{v:5,tut:G.tut,owned:G.owned,flags:G.flags,bpos:G.bpos,seed:SEED,day:G.day,time:G.time,coins:G.coins,energy:G.energy,hp:G.hp,drink:G.drink,inv:G.inv,lv:G.lv,water:G.water,built:G.built,caught:G.caught,quest:G.quest,seedSel:G.seedSel,buildSel:G.buildSel,hb:G.hb,tool:G.tool,bag:G.bag,look:G.look,pet:G.pet,farm:G.farm,seen:G.seen,calm:G.calm,jn:G.jn,stat:G.stat,mile:G.mile,lp:G.lp,lic:G.lic,mus:G.mus,weather:G.weather,wnext:G.wnext,bottle:G.bottle,tmap:G.tmap,letters:G.letters,px:PL.x,pz:PL.z,objs,orem,tiles,pl}}
-function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(serialize()))}catch(e){}}
+  return{v:5,at:Date.now(),tut:G.tut,owned:G.owned,flags:G.flags,bpos:G.bpos,seed:SEED,day:G.day,time:G.time,coins:G.coins,energy:G.energy,hp:G.hp,drink:G.drink,inv:G.inv,lv:G.lv,water:G.water,built:G.built,caught:G.caught,quest:G.quest,seedSel:G.seedSel,buildSel:G.buildSel,hb:G.hb,tool:G.tool,bag:G.bag,look:G.look,pet:G.pet,farm:G.farm,seen:G.seen,calm:G.calm,jn:G.jn,stat:G.stat,mile:G.mile,lp:G.lp,lic:G.lic,mus:G.mus,weather:G.weather,wnext:G.wnext,bottle:G.bottle,tmap:G.tmap,letters:G.letters,px:PL.x,pz:PL.z,objs,orem,tiles,pl}}
+function save(){try{localStorage.setItem('serene-slot',SLOT);localStorage.setItem(SAVE_KEY,JSON.stringify(serialize()))}catch(e){}}
 function loadSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));return s&&s.v===5?s:null}catch(e){return null}}
 window.claude?.hot?.snapshot?.(()=>serialize());
 
@@ -2189,10 +2202,10 @@ async function loadProg(p,t){$('#lFill').style.width=Math.round(p*100)+'%';$('#l
 async function start2(){
   $('#lTip').textContent=TIPS[Math.floor(Math.random()*TIPS.length)];const tipI=setInterval(()=>{$('#lTip').textContent=TIPS[Math.floor(Math.random()*TIPS.length)]},2600);
   const sv=loadSave();await loadProg(.02,'Đang tìm hòn đảo trên bản đồ…');await buildWorld(sv,loadProg);await loadProg(1,'Xong! Chào mừng tới đảo.');clearInterval(tipI);if(sv)rebuildPlayer();applySet();$('#gear').onclick=()=>{if(!uiOpen)openPanel('settings')};document.body.classList.add('menu');MENU.on=true;MENU.time=G.time;if(sv)$('#contInfo').textContent=`${NM()} · ${SEAS[season()].n} ${seasonDay()} · ngày ${G.day}`;
-  $('#bSet').onclick=()=>openPanel('settings');$('#bCred').onclick=()=>openPanel('credits');$('#bDon').onclick=()=>openPanel('donate');if(sv){$('#bContinue').hidden=false;$('#bDel').hidden=false}$('#bDel').onclick=()=>openPanel('wipe');
+  $('#bSet').onclick=()=>openPanel('settings');$('#bCred').onclick=()=>openPanel('credits');$('#bDon').onclick=()=>openPanel('donate');{const n=[...Array(SLOTS).keys()].filter(i=>slotInfo(i)).length;if(n){$('#bDel').hidden=false;$('#slotInfo').textContent=`${n}/${SLOTS} đảo`}}if(sv)$('#bContinue').hidden=false;$('#bDel').onclick=()=>openPanel('islands');
   camYaw=Math.PI*.15;renderHUD();applyDay();requestAnimationFrame(frame);$('#loading').hidden=true;
   $('#bContinue').onclick=()=>{menuOff();audioOn();$('#title').hidden=true;running=true;renderQuest();toast(`Chào mừng ${NM()} trở lại, ngày ${G.day}!`)};
-  $('#bNew').onclick=()=>{try{localStorage.removeItem(SAVE_KEY)}catch(e){}if(sv){try{sessionStorage.setItem('rg-intro','1')}catch(e){}location.reload();return}showCreate()};
+  $('#bNew').onclick=()=>{if(!sv){showCreate();return}const f=freeSlot();if(f<0){openPanel('islands');toast(`Đã đủ ${SLOTS} hòn đảo. Xoá bớt một đảo để tạo đảo mới.`);return}goSlot(f,true)};
   let auto=false;try{auto=sessionStorage.getItem('rg-intro')==='1';sessionStorage.removeItem('rg-intro')}catch(e){}if(auto&&!sv){showCreate()}
   setInterval(()=>{if(running)save()},45000);addEventListener('beforeunload',()=>{if(running)save()});
 }
