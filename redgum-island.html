@@ -52,6 +52,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:#24180e;font-family:va
 .slot:focus-visible,.btn:focus-visible{outline:3px solid #2f7fd0;outline-offset:2px}
 #help{position:absolute;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));padding:6px 12px;font-size:13px;font-weight:600;line-height:1.5;color:var(--ink-2);max-width:230px}
 #help[hidden]{display:none}
+.helpbox{display:flex;flex-direction:column;gap:6px;margin-top:6px}.hrow{display:grid;grid-template-columns:minmax(150px,auto) 1fr;gap:10px;align-items:center;font-size:14px;color:var(--ink)}.hk{display:flex;flex-wrap:wrap;gap:3px}
 #panelWrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(36,24,14,.35);padding:16px;box-sizing:border-box}
 #panel{width:min(600px,100%);max-height:min(80vh,680px);overflow:auto;background:var(--paper);border:4px solid var(--bark);border-radius:20px;box-shadow:0 8px 0 rgba(58,39,21,.5);padding:18px 20px 20px;box-sizing:border-box}
 #panel h2{margin:0;font-size:28px;line-height:1.1;font-weight:800;text-wrap:balance}
@@ -114,7 +115,7 @@ body.intro #hud,body.intro #touch{display:none}
 .rprog{position:relative;width:14px;height:min(320px,46vh);border-radius:7px;background:#5a3a22;border:3px solid #6b4423;overflow:hidden;display:flex;align-items:flex-end}.rprog i{display:block;width:100%}
 .rhint{margin-top:8px;font-size:12px;font-weight:700;text-align:center;line-height:1.3}
 #title{z-index:10}#panelWrap{z-index:30}#intro{z-index:20}#dlg{z-index:25}#fade{z-index:40}
-#gear{position:absolute;top:calc(176px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:44px;height:44px;font-size:22px;line-height:1;cursor:pointer;pointer-events:auto;color:var(--ink);font-family:var(--f-ui);padding:0}
+#gear{position:absolute;top:calc(176px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:46px;height:46px;font-size:22px;line-height:1;cursor:pointer;pointer-events:auto;color:#4a2f1c;font-family:var(--f-ui);padding:0;display:flex;align-items:center;justify-content:center;border:3px solid var(--bark)}#gear svg{display:block}#gear:hover{background:#fff3d6}
 @media (max-width:700px){#gear{top:calc(114px + env(safe-area-inset-top,0px))}}
 .srow{display:grid;grid-template-columns:150px 1fr 52px;gap:12px;align-items:center;padding:8px 4px;border-bottom:2px dashed #ead6a8}
 .srow:last-child{border-bottom:none}.srow label{font-weight:700}.srow output{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
@@ -164,7 +165,7 @@ body.intro #hud,body.intro #touch{display:none}
   <div id="quest" class="chip" hidden><b>Nhiệm vụ</b><div id="questT"></div><div id="questP"></div><div id="questTip"></div></div>
   <div id="coins" class="chip"><span class="coin"></span><b id="coinLbl">0</b></div>
   <canvas id="mini" width="160" height="160"></canvas>
-  <button id="gear" class="chip" type="button" aria-label="Cài đặt" title="Cài đặt (Esc)">⚙</button>
+  <button id="gear" class="chip" type="button" aria-label="Cài đặt" title="Cài đặt (Esc)"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M10.3 2h3.4l.5 2.6c.6.2 1.2.5 1.7.9l2.5-.9 1.7 2.9-2 1.8c.1.6.1 1.2 0 1.8l2 1.8-1.7 2.9-2.5-.9c-.5.4-1.1.7-1.7.9l-.5 2.6h-3.4l-.5-2.6c-.6-.2-1.2-.5-1.7-.9l-2.5.9-1.7-2.9 2-1.8a6 6 0 0 1 0-1.8l-2-1.8 1.7-2.9 2.5.9c.5-.4 1.1-.7 1.7-.9zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z" transform="translate(0 1)"/></svg></button>
   <div id="hint" class="chip"></div>
   <div id="toasts"></div>
   <div id="hotbar"></div>
@@ -1238,13 +1239,22 @@ function applySet(){if(AOUT.master){AOUT.master.gain.value=SET.vol/100;AOUT.sfx.
   renderer.setPixelRatio({low:.7,mid:1,high:Math.min(window.devicePixelRatio||1,2)}[SET.quality]);resize();
   const ms={low:1024,mid:2048,high:2048}[SET.quality];if(sun.shadow.mapSize.x!==ms){sun.shadow.mapSize.set(ms,ms);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}
   sun.castShadow=!!SET.shadows;if(typeof tufts!=='undefined'&&tufts){tufts.visible=SET.grass;flowers.visible=SET.grass}
-  camera.fov=SET.fov;camera.updateProjectionMatrix();FOG0.far=SET.view;FOG0.near=Math.min(45,SET.view*.3);if(!IN.on){scene.fog.far=FOG0.far;scene.fog.near=FOG0.near}$('#help').hidden=!SET.help}
+  camera.fov=SET.fov;camera.updateProjectionMatrix();FOG0.far=SET.view;FOG0.near=Math.min(45,SET.view*.3);if(!IN.on){scene.fog.far=FOG0.far;scene.fog.near=FOG0.near}$('#help').hidden=true}
 const sld=(k,l,min,max,unit='')=>`<div class="srow"><label for="set-${k}">${l}</label><input type="range" id="set-${k}" data-set="${k}" min="${min}" max="${max}" value="${SET[k]}"><output id="out-${k}">${SET[k]}${unit}</output></div>`;
 const tog=(k,l)=>`<div class="srow"><label>${l}</label><div class="seg"><button class="tab ${SET[k]?'on':''}" data-a="stog" data-v="${k}" data-b="1" type="button">Bật</button><button class="tab ${SET[k]?'':'on'}" data-a="stog" data-v="${k}" data-b="0" type="button">Tắt</button></div><span></span></div>`;
-function settingsHTML(){let h=head('Cài đặt','Thiết lập được lưu tự động trên trình duyệt này.')+`<div class="tabs">${[['sound','Âm thanh'],['gfx','Hình ảnh'],['ctrl','Điều khiển']].map(([k,l])=>`<button class="tab ${setTab===k?'on':''}" data-a="settab" data-v="${k}" type="button">${l}</button>`).join('')}</div>`;
+function settingsHTML(){let h=head('Cài đặt','Thiết lập được lưu tự động trên trình duyệt này.')+`<div class="tabs">${[['sound','Âm thanh'],['gfx','Hình ảnh'],['ctrl','Điều khiển'],['help','Hướng dẫn']].map(([k,l])=>`<button class="tab ${setTab===k?'on':''}" data-a="settab" data-v="${k}" type="button">${l}</button>`).join('')}</div>`;
   if(setTab==='sound')h+=sld('vol','Âm lượng tổng',0,100,'%')+sld('music','Nhạc nền',0,100,'%')+sld('sfx','Hiệu ứng âm thanh',0,100,'%');
   else if(setTab==='gfx')h+=`<div class="srow"><label>Chất lượng đồ hoạ</label><div class="seg">${[['low','Thấp'],['mid','Vừa'],['high','Cao']].map(([k,l])=>`<button class="tab ${SET.quality===k?'on':''}" data-a="squal" data-v="${k}" type="button">${l}</button>`).join('')}</div><span></span></div>`
-    +tog('shadows','Bóng đổ')+tog('grass','Cỏ và hoa')+sld('fov','Góc nhìn camera',35,75,'°')+sld('view','Tầm nhìn xa',80,260)+tog('help','Khung trợ giúp phím');
+    +tog('shadows','Bóng đổ')+tog('grass','Cỏ và hoa')+sld('fov','Góc nhìn camera',35,75,'°')+sld('view','Tầm nhìn xa',80,260);
+  else if(setTab==='help'){const k=c=>`<span class="kbd">${keyName(SET.keys[c])}</span>`,K2=t=>`<span class="kbd">${t}</span>`;
+    h+=`<div class="helpbox">${[
+      [`${k('up')}${k('left')}${k('down')}${k('right')}`,'Di chuyển'],[k('run'),'Chạy nhanh (tốn sức gấp đôi)'],[k('jump'),'Nhảy'],
+      [`${K2('Chuột trái')}${k('use')}`,'Dùng đồ đang cầm (giữ để làm liên tục), ăn/uống'],[k('act'),'Nói chuyện, thu hoạch, uống nước'],
+      [`${K2('1–9')}${K2('0')}${K2('Lăn chuột')}`,'Đổi ô trên thanh nhanh'],[K2('R'),'Đổi hạt giống / đồ đặt · xoay khi di chuyển đồ'],
+      [k('move'),'Di chuyển công trình, đồ đã đặt'],[k('inv'),'Túi đồ · gán và kéo thả đồ vào thanh nhanh'],
+      [K2('Rê chuột'),'Xoay camera (bấm vào màn hình trước)'],[`${K2('Ctrl+lăn')}${K2('+ / −')}`,'Phóng to / thu nhỏ'],[K2('M'),'Bật / tắt nhạc'],[K2('Esc'),'Nhả chuột, mở Cài đặt']
+    ].map(([a,b])=>`<div class="hrow"><div class="hk">${a}</div><div>${b}</div></div>`).join('')}</div>
+    <p class="sub" style="margin-top:8px">Ngày bắt đầu 7 giờ. 23 giờ phải về tới lều, không thì ngất và mất hết đồ trong túi. Nhớ ăn uống đủ: tim (máu), giọt nước (nước), tia sét (sức).</p>`}
   else h+=sld('sens','Độ nhạy chuột',10,100)+tog('invY','Đảo trục dọc camera')+Object.keys(KEYN).map(k=>`<div class="srow"><label>${KEYN[k]}</label><button class="kb ${REBIND===k?'wait':''}" data-a="bind" data-v="${k}" type="button">${REBIND===k?'Bấm phím…':keyName(SET.keys[k])}</button><span></span></div>`).join('')
     +'<p class="sub" style="margin-top:8px">Bấm vào ô phím rồi nhấn phím mới. Esc để huỷ. Phím mũi tên luôn dùng để di chuyển.</p>';
   return h+'<div class="detail" style="justify-content:flex-end"><button class="btn" data-a="sreset" type="button" style="background:#9a8a6a;box-shadow:0 3px 0 #6a5a3a">Khôi phục mặc định</button><button class="btn alt" data-a="close" type="button">Xong</button></div>'}
@@ -1367,7 +1377,7 @@ addEventListener('keydown',e=>{const c=e.code,K=SET.keys;if(REBIND){e.preventDef
   else if(c.startsWith('Digit')){const n=+c.slice(5);if(n>=1&&n<=9)selectTool(n-1);else if(n===0)selectTool(9)}
   else if(c==='KeyR')cycle();
   else if(c===K.inv||c==='Tab'){e.preventDefault();openPanel('inv')}
-  else if(c==='KeyH'){const h=$('#help');h.hidden=!h.hidden}
+  else if(c==='KeyH'){setTab='help';openPanel('settings')}
   else if(c==='KeyM')musicToggle();else if(c==='KeyN'){muted=!muted;toast(muted?'Tắt hiệu ứng âm thanh':'Bật hiệu ứng âm thanh')}
   else if(c==='Equal'||c==='NumpadAdd')camDist=Math.max(7,camDist-1.5);else if(c==='Minus'||c==='NumpadSubtract')camDist=Math.min(24,camDist+1.5)});
 addEventListener('keyup',e=>{keys[e.code]=false;const K=SET.keys;if(e.code===K.use)toolHold=false;if(e.code===K.use||e.code===K.jump){if(fish.state==='charge'&&e.code===K.use)rodUp();if(fish.state==='reel')REEL.hold=false}});
